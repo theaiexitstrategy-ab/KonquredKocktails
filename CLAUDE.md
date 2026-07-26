@@ -38,7 +38,17 @@ Usage guidance: Warm Black / Deep Emerald for backgrounds, Cream Highlight for b
 ## Stack
 - Next.js 14 App Router, deployed on Vercel. Stripe (deposits). Video on Mux via `@mux/mux-player-react`.
 - Deliberately minimal: no Tailwind, no Supabase, no auth, no middleware. The page is 100% inline-styled and posts to exactly one API route.
-- Routes: `/` (the site) and `POST /api/checkout/kbsetup` (the $200 deposit). Both public.
+- Routes: `/` (the site), `/merch` (the storefront), and `POST /api/checkout/kbsetup` (the $200 deposit). All public.
+- Brand tokens (palette + the two typefaces) live in `app/theme.ts` — both pages import from it so they can't drift.
+
+## /merch — portal-driven storefront
+Same format as `theflexfacility.com/merch`, `islaystudiosllc.com/merch`, and `willpowerfitnessfactory.com/merch`. **The GoElev8 portal is the catalog** — nothing about the products is hardcoded here. Stephen lists / hides / re-prices / re-photographs merch in the portal Merch tab and it appears on the next page load. No redeploy.
+
+- read: `GET {NEXT_PUBLIC_PORTAL_URL}/api/external/products?slug={NEXT_PUBLIC_PORTAL_SLUG}`
+- buy: `POST {NEXT_PUBLIC_PORTAL_URL}/api/external/checkout` → Stripe Connect **direct** charge on Stephen's connected account, created portal-side. This storefront never sees his `acct_` id, and the portal prices against its own DB so nothing here can fabricate a discounted line item.
+- Stripe collects name / email / phone / shipping natively; this page only gathers the variant (size, color) first. Order recording, notifications, and the platform fee all live portal-side. **There is deliberately no order state in this repo.**
+- Product images come from arbitrary operator-uploaded hosts, so the cards use a plain `<img>` rather than `next/image` — avoids allow-listing every remote host in `next.config.mjs`.
+- A `404 tenant_not_found` is treated as the pre-launch empty shelf, not an error.
 
 ## Env vars (see `.env.local.example`)
 | Var | Purpose | Without it |
@@ -46,6 +56,8 @@ Usage guidance: Warm Black / Deep Emerald for backgrounds, Cream Highlight for b
 | `NEXT_PUBLIC_APP_URL` | `https://konqueredkocktails.com` — Stripe return URLs | Stripe returns to the wrong origin |
 | `STRIPE_SECRET_KEY` | goElev8 platform key | checkout route 500s |
 | `KB_STRIPE_CONNECTED_ACCOUNT_ID` | Konquered Balance `acct_...` | route 402s → page shows "Demo mode — no live charge" |
+| `NEXT_PUBLIC_PORTAL_URL` | portal origin for /merch | defaults to `https://portal.goelev8.ai` |
+| `NEXT_PUBLIC_PORTAL_SLUG` | tenant slug for /merch | defaults to `konquered-kocktails`; must match `clients.slug` in the portal |
 
 The 402 is intentional, not a bug: without the connected account, charging would route guest deposits into goElev8's balance, contradicting the "you keep 100% of the deposits" promise on the page. Never add a platform-charge fallback.
 
@@ -60,6 +72,7 @@ The 402 is intentional, not a bug: without the connected account, charging would
 - Never commit raw MP4 masters to the repo or serve them un-optimized from `public/`.
 
 ## Current work log
+- 2026-07-25: Added `/merch`, portal-driven. Extracted `app/theme.ts` so the storefront and homepage share one palette. Added a "Shop" nav link (NAV_LINKS entries beginning with `/` are real routes; everything else is a scroll anchor).
 - 2026-07-25: Migrated the finished page out of `goelev8-funnels` into this standalone repo as the homepage. Added Cormorant Garamond as the display face alongside Outfit. Dropped the `setup` (client-pays-goElev8) branch from the checkout route — customer-facing site takes deposits only.
 
 ## Open items / follow-ups

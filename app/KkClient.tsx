@@ -5,6 +5,14 @@ import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { useEffect, useState, type CSSProperties } from 'react';
 
+/* Brand palette + typefaces live in app/theme.ts so this page and the
+   storefront at /merch can't drift apart. CLAUDE.md is the source of truth
+   for the values themselves. */
+import {
+  INK, PANEL, PANEL2, EMERALD, EMERALD_D, GOLD, GOLD_HI, BRONZE, GOLD_D,
+  GARNET, AMETHYST, CREAM, TEXT, MUTED, DIM, LINE, LINE2, FD, FB, CONTACT,
+} from './theme';
+
 /* Videos are hosted on Mux — nothing lives in the repo. The <mux-player>
    custom element can't render during SSR, so load it client-side only. */
 const MuxPlayer = dynamic(() => import('@mux/mux-player-react'), { ssr: false });
@@ -14,41 +22,17 @@ const HERO_VIDEO_ID = 'FSsAfj00KwDZSPPaApJjMHqx5msnrneNULZFEdDov01g8';   // sile
 const ABOUT_VIDEO_ID = 'MOxiZEb302JK1hwfkQzUQU3EDriQ401stR1CoSrTx02lq00'; // Gentleman Jack feature
 const MENU_VIDEO_ID = 'aJAE59oLfQgbyWqAY1cs9avjbrCg6FsIJunL8cNr5nw';      // "From the studio" feature
 
-/* Header / mobile-menu links — shared by desktop nav and the mobile drawer. */
+/* Header / mobile-menu links — shared by desktop nav and the mobile drawer.
+   A target starting with '/' is a real route (rendered as a plain link);
+   anything else is an on-page section id that smooth-scrolls. */
 const NAV_LINKS: [string, string][] = [
   ['Experiences', 'experiences'],
   ['Menu', 'menu'],
   ['About', 'about'],
+  ['Shop', '/merch'],
 ];
 
-/* ── Konquered Kocktails brand palette (CLAUDE.md source of truth) ────
-   Warm Black / Deep Emerald backgrounds · Cream Highlight body text ·
-   Royal Gold / Konquered Bronze accents & CTAs · Garnet + Amethyst
-   sparingly for depth. Elegant serif display, no monospace. */
-const INK = '#151310';        // Warm Black — base background
-const PANEL = '#1b1813';      // raised surfaces (warm)
-const PANEL2 = '#232019';     // nested surfaces
-const EMERALD = '#123D35';    // Deep Emerald — feature background band
-const EMERALD_D = '#0d2b25';  // deeper emerald for gradients
-const GOLD = '#C39A45';       // Royal Gold — primary accent / CTA
-const GOLD_HI = '#D9B25A';    // lighter royal gold for gradient tops / shimmer
-const BRONZE = '#9A633A';     // Konquered Bronze — secondary accent
-const GOLD_D = '#6f4a26';     // deep bronze for gradient bottoms / shadow
-const GARNET = '#681F2B';     // Konquered Garnet — depth, used sparingly
-const AMETHYST = '#5C3B70';   // Amethyst Accent — depth, used sparingly
-const CREAM = '#E8D8B8';      // Cream Highlight
-const TEXT = '#EFE7D5';       // primary text (bright cream)
-const MUTED = '#A99C82';      // warm muted
-const DIM = '#776C58';        // faint
-const LINE = 'rgba(195,154,69,0.16)';   // royal-gold hairline
-const LINE2 = 'rgba(195,154,69,0.30)';  // stronger gold hairline
-
-/* Two typefaces, loaded in app/layout.tsx. FD carries the editorial voice —
-   hero, section headlines, drink names, the $200 figure. FB carries every
-   functional surface: eyebrows, labels, buttons, inputs, nav, and the
-   wordmark itself, which stays Outfit to match the Konquered Balance logo. */
-const FD = '"Cormorant Garamond", "Times New Roman", Georgia, serif'; // display — editorial headlines
-const FB = '"Outfit", system-ui, -apple-system, sans-serif'; // body, labels, buttons, wordmark
+const isRoute = (target: string) => target.startsWith('/');
 
 /* ── Real Konquered Kocktails content (verbatim from the live page) ── */
 
@@ -120,13 +104,6 @@ const GOALS = [
 const SLOTS = ['1:00 PM', '3:00 PM', '5:00 PM', '6:00 PM', '7:00 PM', '8:00 PM', '9:00 PM'];
 
 const STEP_LABELS = ['Your info', 'Pick a date', 'Deposit', 'Booked'];
-
-const CONTACT = {
-  phone: '(314) 503-9198',
-  email: 'stephen@konqueredbalance.com',
-  address: '920 Hemsath, Suite 100, St. Charles, MO 63303',
-  area: 'St. Charles & Greater St. Louis',
-};
 
 type DayOption = { key: string; dow: string; md: string };
 type Lead = { name: string; phone: string; email: string; goal: string };
@@ -280,8 +257,10 @@ export default function KkClient() {
           {/* Desktop nav — hidden below the mobile breakpoint (see kk-desktop-nav) */}
           <nav aria-label="Sections" className="kk-desktop-nav"
             style={{ fontFamily: FB, fontSize: 12, letterSpacing: '1.6px', textTransform: 'uppercase', fontWeight: 500 }}>
-            {NAV_LINKS.map(([label, id]) => (
-              <a key={id} href={`#${id}`} onClick={(e) => smoothScrollTo(e, id)}
+            {NAV_LINKS.map(([label, target]) => (
+              <a key={target}
+                 href={isRoute(target) ? target : `#${target}`}
+                 onClick={isRoute(target) ? undefined : (e) => smoothScrollTo(e, target)}
                  className="kk-navlink"
                  style={{ color: MUTED, textDecoration: 'none', whiteSpace: 'nowrap' }}>
                 {label}
@@ -311,9 +290,14 @@ export default function KkClient() {
         </div>
         {menuOpen && (
           <nav id="kk-mobile-menu" className="kk-mobile-menu" aria-label="Menu">
-            {NAV_LINKS.map(([label, id]) => (
-              <a key={id} href={`#${id}`} className="kk-mobile-link"
-                 onClick={(e) => { smoothScrollTo(e, id); setMenuOpen(false); }}>
+            {NAV_LINKS.map(([label, target]) => (
+              <a key={target}
+                 href={isRoute(target) ? target : `#${target}`}
+                 className="kk-mobile-link"
+                 onClick={(e) => {
+                   if (!isRoute(target)) smoothScrollTo(e, target);
+                   setMenuOpen(false);
+                 }}>
                 {label}
               </a>
             ))}
