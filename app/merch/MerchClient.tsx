@@ -169,10 +169,8 @@ export default function MerchClient() {
             </span>
           </Link>
           <nav style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 22 }}>
-            <Link href="/" className="kk-navlink"
-              style={{ fontFamily: FB, fontSize: 12, letterSpacing: '1.6px', textTransform: 'uppercase', fontWeight: 500, color: MUTED, textDecoration: 'none', whiteSpace: 'nowrap' }}>
-              Home
-            </Link>
+            <Link href="/" className="kk-navlink" style={navLink}>Home</Link>
+            <Link href="/portfolio" className="kk-navlink" style={navLink}>Portfolio</Link>
             <Link href="/#book" className="kk-gold-btn"
               style={{ ...goldButton, padding: '10px 22px', fontSize: 12 }}>
               Book an Event
@@ -513,6 +511,11 @@ function Notice({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
+const navLink: CSSProperties = {
+  fontFamily: FB, fontSize: 12, letterSpacing: '1.6px', textTransform: 'uppercase',
+  fontWeight: 500, color: MUTED, textDecoration: 'none', whiteSpace: 'nowrap',
+};
 
 const labelStyle: CSSProperties = {
   display: 'block', fontFamily: FB, fontSize: 10.5, letterSpacing: '1.4px',

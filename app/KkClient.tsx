@@ -29,6 +29,7 @@ const NAV_LINKS: [string, string][] = [
   ['Experiences', 'experiences'],
   ['Menu', 'menu'],
   ['About', 'about'],
+  ['Portfolio', '/portfolio'],
   ['Shop', '/merch'],
 ];
 

@@ -38,7 +38,7 @@ Usage guidance: Warm Black / Deep Emerald for backgrounds, Cream Highlight for b
 ## Stack
 - Next.js 14 App Router, deployed on Vercel. Stripe (deposits). Video on Mux via `@mux/mux-player-react`.
 - Deliberately minimal: no Tailwind, no Supabase, no auth, no middleware. The page is 100% inline-styled and posts to exactly one API route.
-- Routes: `/` (the site), `/merch` (the storefront), and `POST /api/checkout/kbsetup` (the $200 deposit). All public.
+- Routes: `/` (the site), `/portfolio` (Stephen's reel), `/merch` (the storefront), and `POST /api/checkout/kbsetup` (the $200 deposit). All public.
 - Brand tokens (palette + the two typefaces) live in `app/theme.ts` — both pages import from it so they can't drift.
 
 ## /merch — portal-driven storefront
@@ -49,6 +49,15 @@ Same format as `theflexfacility.com/merch`, `islaystudiosllc.com/merch`, and `wi
 - Stripe collects name / email / phone / shipping natively; this page only gathers the variant (size, color) first. Order recording, notifications, and the platform fee all live portal-side. **There is deliberately no order state in this repo.**
 - Product images come from arbitrary operator-uploaded hosts, so the cards use a plain `<img>` rather than `next/image` — avoids allow-listing every remote host in `next.config.mjs`.
 - A `404 tenant_not_found` is treated as the pre-launch empty shelf, not an error.
+
+## /portfolio — Stephen's reel
+A résumé page: credential strip, then up to **5** Mux videos. Portal-driven the same way `/merch` is, so Stephen adds/removes reel entries from the portal Portfolio tab with no redeploy.
+
+- read: `GET {NEXT_PUBLIC_PORTAL_URL}/api/external/portfolio?slug={NEXT_PUBLIC_PORTAL_SLUG}` → `{ videos: [{ key, title, description, playback_id, poster_url, sort_order }] }`
+- **This endpoint does not exist in the portal yet.** Until it ships, the page renders `SEED_VIDEOS` in `PortfolioClient.tsx` (the three clips Stephen started with) and switches over silently the moment the portal answers.
+- Any failure — 404, network, malformed, or an empty array — keeps the seed reel on screen. A portfolio showing nothing is worse than one that's slightly stale, so there is deliberately no empty state in the normal path.
+- `MAX_VIDEOS = 5` is enforced here on render **and** must be enforced portal-side on write. Two independent caps on purpose.
+- Credential strip copy must stay independently verifiable — don't add a credential that isn't already carried on the site or in this file.
 
 ## Env vars (see `.env.local.example`)
 | Var | Purpose | Without it |
@@ -72,6 +81,7 @@ The 402 is intentional, not a bug: without the connected account, charging would
 - Never commit raw MP4 masters to the repo or serve them un-optimized from `public/`.
 
 ## Current work log
+- 2026-07-28: Added `/portfolio`, portal-driven with a seed-reel fallback (the portal endpoint isn't built yet). Capped at 5 videos.
 - 2026-07-25: Added `/merch`, portal-driven. Extracted `app/theme.ts` so the storefront and homepage share one palette. Added a "Shop" nav link (NAV_LINKS entries beginning with `/` are real routes; everything else is a scroll anchor).
 - 2026-07-25: Migrated the finished page out of `goelev8-funnels` into this standalone repo as the homepage. Added Cormorant Garamond as the display face alongside Outfit. Dropped the `setup` (client-pays-goElev8) branch from the checkout route — customer-facing site takes deposits only.
 
