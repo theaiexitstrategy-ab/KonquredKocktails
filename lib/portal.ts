@@ -22,7 +22,7 @@ const PORTAL_URL =
 const WRITE_KEY = process.env.KK_PORTAL_WRITE_KEY || '';
 
 export const PORTAL_SLUG =
-  process.env.NEXT_PUBLIC_PORTAL_SLUG || 'konquered-kocktails';
+  process.env.NEXT_PUBLIC_PORTAL_SLUG || 'konquered-balance';
 
 /** Deposit amount, in cents. The portal re-validates this against the
  *  tenant's own config, so this is a request, not an authority. */

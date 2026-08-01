@@ -41,7 +41,7 @@ import {
 const PORTAL_URL =
   process.env.NEXT_PUBLIC_PORTAL_URL || 'https://portal.goelev8.ai';
 const PORTAL_SLUG =
-  process.env.NEXT_PUBLIC_PORTAL_SLUG || 'konquered-kocktails';
+  process.env.NEXT_PUBLIC_PORTAL_SLUG || 'konquered-balance';
 
 /* Flat customer-facing processing fee, shown in each card's price
    breakdown so the total on the shelf matches the total on Stripe's

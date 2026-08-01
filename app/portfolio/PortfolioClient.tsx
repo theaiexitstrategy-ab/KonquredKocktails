@@ -43,7 +43,7 @@ const MuxPlayer = dynamic(() => import('@mux/mux-player-react'), { ssr: false })
 const PORTAL_URL =
   process.env.NEXT_PUBLIC_PORTAL_URL || 'https://portal.goelev8.ai';
 const PORTAL_SLUG =
-  process.env.NEXT_PUBLIC_PORTAL_SLUG || 'konquered-kocktails';
+  process.env.NEXT_PUBLIC_PORTAL_SLUG || 'konquered-balance';
 
 type LoggedEvent = {
   key: string;
@@ -136,7 +136,27 @@ export default function PortfolioClient() {
         (e: LoggedEvent) => e && typeof e.playback_id === 'string' && e.playback_id,
       );
       if (usable.length) {
-        setEvents(usable);
+        /* The portal is authoritative, but its first build shipped the
+           reel-shaped row (key/title/playback_id only) — no event_type,
+           date, venue, or description. Taking it verbatim would blank the
+           copy and hide the filters entirely. So: portal wins on every
+           field it actually has, and the seed fills only what the portal
+           left null, and only for keys the seed already knows. Once
+           Stephen backfills the metadata this merge stops doing anything. */
+        const seedByKey = new Map(SEED_EVENTS.map((s) => [s.key, s]));
+        setEvents(usable.map((e) => {
+          const seed = seedByKey.get(e.key);
+          if (!seed) return e;
+          return {
+            ...e,
+            description: e.description ?? seed.description,
+            event_type: e.event_type ?? seed.event_type,
+            event_date: e.event_date ?? seed.event_date,
+            venue: e.venue ?? seed.venue,
+            city: e.city ?? seed.city,
+            guest_count: e.guest_count ?? seed.guest_count,
+          };
+        }));
         setLive(true);
       }
     } catch (err) {

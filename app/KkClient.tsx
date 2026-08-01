@@ -30,6 +30,7 @@ const NAV_LINKS: [string, string][] = [
   ['Menu', 'menu'],
   ['About', 'about'],
   ['Event Log', '/portfolio'],
+  ['Reviews', '/reviews'],
   ['Shop', '/merch'],
 ];
 
