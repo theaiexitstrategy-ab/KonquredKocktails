@@ -18,10 +18,19 @@
 // All three go through our own server routes, never straight to the portal:
 // the tenant write key is secret. See lib/portal.ts.
 //
-// Pre-launch, those routes answer 402 { demo: true } because there's no
-// portal tenant yet. Step 2 then offers provisional dates clearly labelled
-// as such, and step 3 lands on the demo confirmation. Nothing pretends a
-// real booking was made.
+// The offerings come from data/experiences.ts — the same Experience
+// Collection the homepage renders, so the two can't diverge. An offering's
+// `slug` IS the portal `experience_key`; renaming one detaches any
+// availability rule bound to it.
+//
+// The flagship's expression (Share My Art / Signature / Imprint / Konquered)
+// is derived from the guest count the visitor already enters, rather than
+// asking them to self-select out of a price table.
+//
+// TODO(Aaron): confirm deposit model — the Experience Collection copy says a
+// 50% non-refundable deposit; this flow charges a flat $200. The amount lives
+// PORTAL-SIDE in api/external/experience-deposit.js, so reconciling them is a
+// portal change, not one here.
 
 import Image from 'next/image';
 import Link from 'next/link';
@@ -29,8 +38,11 @@ import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'r
 
 import {
   INK, PANEL, PANEL2, GOLD, GOLD_HI, GOLD_D, GARNET, AMETHYST, EMERALD,
-  CREAM, TEXT, MUTED, DIM, LINE, LINE2, FD, FB, CONTACT, EXPERIENCES,
+  CREAM, TEXT, MUTED, DIM, LINE, LINE2, FD, FB, CONTACT,
 } from '../theme';
+import {
+  EXPERIENCE_COLLECTION, experienceBySlug, investmentLine, tierForGuestCount,
+} from '@/data/experiences';
 
 const TZ = 'America/Chicago';
 const STEP_LABELS = ['Your event', 'Pick a date', 'Deposit', 'Booked'];
@@ -94,7 +106,7 @@ function demoDays(): Day[] {
 export default function BookClient() {
   const [step, setStep] = useState(1);
 
-  const [experience, setExperience] = useState(EXPERIENCES[0].key);
+  const [experience, setExperience] = useState(EXPERIENCE_COLLECTION[0].slug);
   const [lead, setLead] = useState<Lead>({ name: '', phone: '', email: '', guests: '' });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [leadBusy, setLeadBusy] = useState(false);
@@ -112,9 +124,19 @@ export default function BookClient() {
   const [depositError, setDepositError] = useState('');
 
   const chosen = useMemo(
-    () => EXPERIENCES.find((e) => e.key === experience) ?? EXPERIENCES[0],
+    () => experienceBySlug(experience) ?? EXPERIENCE_COLLECTION[0],
     [experience],
   );
+
+  /* Guest count drives which flagship expression the enquiry lands in, so we
+     can name it back to them instead of making them read a price table. */
+  const guestCount = useMemo(() => {
+    const n = parseInt(lead.guests.replace(/\D/g, ''), 10);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }, [lead.guests]);
+
+  const tier = useMemo(() => tierForGuestCount(chosen, guestCount), [chosen, guestCount]);
+  const investment = useMemo(() => investmentLine(chosen, guestCount), [chosen, guestCount]);
 
   const whenDisplay = useMemo(() => {
     if (!dayKey || !slot) return '';
@@ -129,7 +151,7 @@ export default function BookClient() {
     /* Homepage package cards deep-link with the experience preselected.
        Ignore an unknown key rather than landing on a blank selection. */
     const pre = params.get('experience');
-    if (pre && EXPERIENCES.some((x) => x.key === pre)) setExperience(pre);
+    if (pre && experienceBySlug(pre)) setExperience(pre);
   }, []);
 
   /* ── Step 2: real availability ─────────────────────────────────── */
@@ -219,9 +241,9 @@ export default function BookClient() {
           email: lead.email,
           phone: lead.phone,
           guest_count: lead.guests,
-          goal: chosen.name,
-          experience_key: chosen.key,
-          experience_display: chosen.name,
+          goal: chosen.title,
+          experience_key: chosen.slug,
+          experience_display: tier ? `${chosen.title} — ${tier.name}` : chosen.title,
           source_url: window.location.href,
         }),
       });
@@ -255,8 +277,8 @@ export default function BookClient() {
           email: lead.email,
           phone: lead.phone,
           guest_count: lead.guests,
-          experience_key: chosen.key,
-          experience_display: chosen.name,
+          experience_key: chosen.slug,
+          experience_display: tier ? `${chosen.title} — ${tier.name}` : chosen.title,
           event_starts_at: slot.starts_at,
           event_tz: TZ,
           when_display: whenDisplay,
@@ -347,10 +369,10 @@ export default function BookClient() {
               <fieldset style={fieldset}>
                 <legend style={legend}>The experience</legend>
                 <div style={{ display: 'grid', gap: 8 }}>
-                  {EXPERIENCES.map((x) => {
-                    const on = experience === x.key;
+                  {EXPERIENCE_COLLECTION.map((x) => {
+                    const on = experience === x.slug;
                     return (
-                      <button key={x.key} type="button" onClick={() => setExperience(x.key)}
+                      <button key={x.slug} type="button" onClick={() => setExperience(x.slug)}
                         aria-pressed={on} className="kk-pill"
                         style={{
                           textAlign: 'left', padding: '13px 15px', borderRadius: 10, cursor: 'pointer',
@@ -359,10 +381,15 @@ export default function BookClient() {
                           color: TEXT, fontFamily: FB, lineHeight: 1.35,
                         }}>
                         <span style={{ display: 'block', fontFamily: FD, fontSize: 19, fontWeight: 700, color: on ? GOLD : TEXT }}>
-                          {x.name}
+                          {x.title}
                         </span>
                         <span style={{ display: 'block', fontSize: 12.5, color: MUTED, marginTop: 3, fontWeight: 300 }}>
                           {x.tagline}
+                        </span>
+                        <span style={{ display: 'block', fontSize: 11.5, color: on ? GOLD : DIM, marginTop: 6, letterSpacing: '0.4px', fontWeight: 500 }}>
+                          {x.tiers
+                            ? `Budget minimums from ${x.tiers[0].budgetMinimum}`
+                            : x.investment}
                         </span>
                       </button>
                     );
@@ -405,7 +432,7 @@ export default function BookClient() {
             <div>
               <h2 style={stepHeading}>Pick a date</h2>
               <p style={{ margin: '10px 0 0', fontSize: 13.5, color: MUTED, lineHeight: 1.6, fontWeight: 300 }}>
-                {chosen.name} · {chosen.duration}
+                {chosen.title}{investment ? ` · ${investment}` : ''}
               </p>
 
               {demo && (
@@ -495,7 +522,9 @@ export default function BookClient() {
             <div>
               <h2 style={stepHeading}>Hold the date</h2>
               <div style={{ marginTop: 20, background: PANEL2, border: `1px solid ${LINE}`, borderRadius: 12, padding: '18px 20px' }}>
-                <Summary label="Experience" value={chosen.name} />
+                <Summary label="Experience" value={chosen.title} />
+                {tier && <Summary label="Expression" value={`${tier.name} · from ${tier.budgetMinimum}`} />}
+                {!tier && investment && <Summary label="Investment" value={investment} />}
                 <Summary label="When" value={whenDisplay} />
                 {lead.guests && <Summary label="Guests" value={`about ${lead.guests}`} />}
                 <Summary label="Name" value={lead.name} />

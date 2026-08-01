@@ -22,8 +22,9 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties } from 're
 import {
   INK, PANEL, PANEL2, EMERALD, EMERALD_D, GOLD, GOLD_HI, GOLD_D, BRONZE,
   GARNET, AMETHYST, CREAM, TEXT, MUTED, DIM, LINE, LINE2, FD, FB,
-  CONTACT, EXPERIENCES,
+  CONTACT,
 } from '../theme';
+import { EXPERIENCE_COLLECTION, experienceBySlug } from '@/data/experiences';
 
 const MAX_PHOTOS = 3;
 const MAX_LONG_EDGE = 1600;
@@ -95,8 +96,8 @@ export default function ReviewsClient() {
     const e = params.get('email');
     if (e && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) setEmail(e);
     const x = params.get('experience');
-    const match = EXPERIENCES.find((v) => v.key === x);
-    if (match) setEventType(match.name);
+    const match = x ? experienceBySlug(x) : undefined;
+    if (match) setEventType(match.title);
   }, []);
 
   const loadPublished = useCallback(async () => {
@@ -310,8 +311,8 @@ export default function ReviewsClient() {
                   <select className="kk-input" value={eventType} onChange={(e) => setEventType(e.target.value)}
                     style={{ ...inputStyle, appearance: 'none' }}>
                     <option value="" style={optionStyle}>Prefer not to say</option>
-                    {EXPERIENCES.map((x) => (
-                      <option key={x.key} value={x.name} style={optionStyle}>{x.name}</option>
+                    {EXPERIENCE_COLLECTION.map((x) => (
+                      <option key={x.slug} value={x.title} style={optionStyle}>{x.title}</option>
                     ))}
                   </select>
                 </label>

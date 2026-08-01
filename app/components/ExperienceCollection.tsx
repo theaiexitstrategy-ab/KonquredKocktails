@@ -85,6 +85,11 @@ function FlagshipCard({ experience: e }: { experience: Experience }) {
         {e.tiers && <TierTable tiers={e.tiers} />}
 
         <IncludedList items={e.included} onEmerald />
+
+        <a href={`/book?experience=${e.slug}`} className="kk-gold-btn"
+           style={{ ...goldButton, marginTop: 'clamp(22px, 3vw, 30px)' }}>
+          Begin the Experience Discovery
+        </a>
       </div>
     </article>
   );
@@ -186,6 +191,13 @@ function ExperienceCard({ experience: e }: { experience: Experience }) {
       )}
 
       <IncludedList items={e.included} />
+
+      {/* Each offering routes into /book with itself preselected — the slug
+          IS the portal experience_key, so the enquiry arrives attributed. */}
+      <a href={`/book?experience=${e.slug}`} className="kk-ghost-btn"
+         style={{ ...ghostButton, marginTop: 4 }}>
+        Begin the Experience Discovery
+      </a>
     </article>
   );
 }
@@ -327,6 +339,15 @@ const tdStyle: CSSProperties = {
   fontFamily: FB, fontSize: 14, fontWeight: 300,
   padding: '13px 0', borderBottom: `1px solid rgba(232,216,184,0.10)`,
   verticalAlign: 'middle',
+};
+
+const ghostButton: CSSProperties = {
+  display: 'block', width: '100%', boxSizing: 'border-box',
+  background: 'transparent', color: CREAM,
+  fontFamily: FB, fontWeight: 500, fontSize: 11.5, letterSpacing: '1.3px',
+  textTransform: 'uppercase', border: `1px solid ${LINE2}`, borderRadius: 999,
+  padding: '13px 18px', cursor: 'pointer', textDecoration: 'none',
+  lineHeight: 1.25, textAlign: 'center',
 };
 
 const goldButton: CSSProperties = {

@@ -19,6 +19,11 @@ export type Tier = {
   name: string;
   designedFor: string;
   budgetMinimum: string;
+  /** Inclusive guest bounds behind `designedFor`. /book uses the guest count
+   *  the visitor already enters to name the tier they're heading for, rather
+   *  than asking them to self-select from a price table. */
+  minGuests: number;
+  maxGuests: number | null;
 };
 
 export type Experience = {
@@ -46,10 +51,10 @@ export const EXPERIENCE_COLLECTION: Experience[] = [
     experience:
       'A custom culinary experience designed around your people, your atmosphere, and the story you are gathering to share. Every expression is shaped through flavor architecture, intentional presentation, and a thoughtful guest journey — from arrival to the final pour.',
     tiers: [
-      { name: 'Share My Art', designedFor: 'Up to 15 guests', budgetMinimum: '$750' },
-      { name: 'Signature', designedFor: '16–50 guests', budgetMinimum: '$1,250' },
-      { name: 'Imprint', designedFor: '51–100 guests', budgetMinimum: '$3,250' },
-      { name: 'Konquered', designedFor: '100+ guests', budgetMinimum: '$4,500' },
+      { name: 'Share My Art', designedFor: 'Up to 15 guests', budgetMinimum: '$750', minGuests: 1, maxGuests: 15 },
+      { name: 'Signature', designedFor: '16–50 guests', budgetMinimum: '$1,250', minGuests: 16, maxGuests: 50 },
+      { name: 'Imprint', designedFor: '51–100 guests', budgetMinimum: '$3,250', minGuests: 51, maxGuests: 100 },
+      { name: 'Konquered', designedFor: '100+ guests', budgetMinimum: '$4,500', minGuests: 101, maxGuests: null },
     ],
     included: [
       'Experience discovery and concept direction',
@@ -152,6 +157,34 @@ export const EXPERIENCE_COLLECTION: Experience[] = [
     ],
   },
 ];
+
+/** Look up an offering by slug. The slug doubles as the `experience_key`
+ *  sent to the portal — availability rules and bookings are keyed on it.
+ *  Renaming a slug therefore detaches any availability bound to it. */
+export function experienceBySlug(slug: string): Experience | undefined {
+  return EXPERIENCE_COLLECTION.find((e) => e.slug === slug);
+}
+
+/** Which expression a guest count lands in. Returns undefined for offerings
+ *  without tiers, or when no count has been entered yet. */
+export function tierForGuestCount(
+  experience: Experience,
+  guests: number | null,
+): Tier | undefined {
+  if (!experience.tiers || !guests || guests < 1) return undefined;
+  return experience.tiers.find(
+    (t) => guests >= t.minGuests && (t.maxGuests === null || guests <= t.maxGuests),
+  );
+}
+
+/** The line shown under an offering while booking: its tier budget minimum
+ *  once we know the guest count, otherwise its starting investment. */
+export function investmentLine(experience: Experience, guests: number | null): string | null {
+  const tier = tierForGuestCount(experience, guests);
+  if (tier) return `${tier.name} · from ${tier.budgetMinimum}`;
+  if (experience.tiers) return `Budget minimums from ${experience.tiers[0].budgetMinimum}`;
+  return experience.investment ?? null;
+}
 
 /* ── The Konquered Experience Journey ──────────────────────────────── */
 

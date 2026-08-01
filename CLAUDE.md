@@ -44,7 +44,10 @@ Usage guidance: Warm Black / Deep Emerald for backgrounds, Cream Highlight for b
 
 - One flagship (Signature Kraft Kocktail Experience) with 4 tiered expressions in a real `<table>`; six single-price offerings in a grid.
 - Pricing text is Royal Gold `#C39A45` on PANEL/PANEL2 — clears 4.5:1. Konquered Bronze `#9A633A` does **not** clear on those surfaces, so bronze is for rules and accents, never pricing.
-- **These slugs are marketing-only.** `/book` sends an `experience_key` from `app/theme.ts`, and the portal's `availability_rules` are keyed on those. The two lists do not correspond — the 7 offerings have no booking keys, so the collection CTA goes to `/book` generally rather than deep-linking. Reconciling them is an open decision.
+- **The slug IS the portal `experience_key`.** One taxonomy across the homepage, `/book`, and `/reviews`. Renaming a slug detaches any `experience_availability_rules` row bound to it. (The 7 placeholder rules use `experience_key = NULL`, so they apply to every offering.)
+- Each offering deep-links to `/book?experience=<slug>` with itself preselected, so the enquiry arrives attributed.
+- The flagship's expression (Share My Art / Signature / Imprint / Konquered) is **derived from the guest count** the visitor enters — `tierForGuestCount()` — rather than making them pick from a price table. It rides along in `experience_display` as "Title — Tier".
+- **Known portal gap:** `experience-leads.js` never reads `guest_count`, so party size is dropped on lead capture. The tier survives only because it's embedded in `experience_display`.
 
 ### Non-negotiable brand language
 - Never **"bartending"** — use *intentional hospitality* / *culinary artistry*.
