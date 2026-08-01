@@ -1,12 +1,19 @@
 // (c) 2026 GoElev8.ai | Aaron Bryant. All rights reserved. Unauthorized use prohibited.
 //
-// Konquered Kocktails — customer-facing booking site. This is the homepage.
+// Konquered Kocktails — the homepage.
 //
-// The live product goElev8 delivers under the Konquered Balance contract:
-// the branded booking site at konqueredkocktails.com. It captures leads,
-// books events, and collects the $200 deposit through
-// /api/checkout/kbsetup (Connect destination charge to Konquered Balance's
-// account).
+// POSITIONING, and the reason most of this copy reads the way it does:
+// this is NOT a bartender-for-hire service. Stephen Simmons is an artist who
+// composes a drink experience out of the elements already in the room — the
+// people, the occasion, the light, the spirits on hand. Copy across the site
+// should read as commissioning an artist, never as booking a bar. If you're
+// editing this page, keep that line.
+//
+// The homepage does not take bookings. Its /#book section is a pitch that
+// links to /book, which is the one booking flow and runs on real
+// portal-computed availability. The old inline funnel here used a
+// client-side next-6-days calendar with seven fixed times and could
+// double-book; it's gone.
 //
 // Served at konqueredkocktails.com/ — migrated here from goelev8.ai/kk.
 // Self-contained, no auth. Carries the Konquered Kocktails palette from
@@ -18,13 +25,13 @@
 import KkClient from './KkClient';
 
 export const metadata = {
-  title: 'Konquered Kocktails — Kraft Kocktail Experiences · Art + Kreativity',
+  title: 'Konquered Kocktails — An Art Gallery in a Glass',
   description:
-    'Handcrafted themed Kocktails, custom mixology experiences, spirit tastings, and curated Art + Kreativity for weddings, corporate events, and private parties across Greater St. Louis. Book your date with a $200 deposit.',
+    'Not a bar service. Stephen Simmons composes a drink experience out of the elements already in your room — live mixology, guided tastings, and curated Art + Kreativity for weddings, corporate events, and private parties across Greater St. Louis.',
   openGraph: {
-    title: 'Konquered Kocktails — Kraft Kocktail Experiences · Art + Kreativity',
+    title: 'Konquered Kocktails — An Art Gallery in a Glass',
     description:
-      'Handcrafted themed Kocktails, custom mixology experiences, and curated Art + Kreativity. Book your event date online.',
+      'Not a bar service. An artist composes a drink experience out of the elements already in your room. Reserve a date.',
     url: 'https://konqueredkocktails.com',
     siteName: 'Konquered Kocktails',
     type: 'website',

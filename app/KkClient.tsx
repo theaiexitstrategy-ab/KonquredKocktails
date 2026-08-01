@@ -29,7 +29,7 @@ const NAV_LINKS: [string, string][] = [
   ['Experiences', 'experiences'],
   ['Menu', 'menu'],
   ['About', 'about'],
-  ['Portfolio', '/portfolio'],
+  ['Event Log', '/portfolio'],
   ['Shop', '/merch'],
 ];
 
@@ -48,7 +48,7 @@ const PACKAGES = [
       '2.5 hours of kustom mixology, live',
       'Handcrafted, themed Kocktails all night',
     ],
-    goal: 'The Kustom Mixology Experience',
+    experienceKey: 'kustom_mixology',
   },
   {
     accent: GOLD,
@@ -61,7 +61,7 @@ const PACKAGES = [
       'Personalized tasting profile kit',
       'Thoughtfully paired snacks',
     ],
-    goal: 'Spirits & Kocktail Tasting',
+    experienceKey: 'spirits_tasting',
   },
   {
     accent: GOLD,
@@ -73,7 +73,7 @@ const PACKAGES = [
       'Signature Kocktails tailored to your event',
       'Professional, curated Kreative service',
     ],
-    goal: 'Full-Service Kreative Experience',
+    experienceKey: 'kreative_private',
   },
 ];
 
@@ -93,37 +93,6 @@ const MENU = [
   },
 ];
 
-const GOALS = [
-  'The Kustom Mixology Experience',
-  'Spirits & Kocktail Tasting',
-  'Full-Service Kreative Experience — Wedding',
-  'Full-Service Kreative Experience — Corporate',
-  'Full-Service Kreative Experience — Private Party',
-  'Kocktail Masterclass',
-];
-
-const SLOTS = ['1:00 PM', '3:00 PM', '5:00 PM', '6:00 PM', '7:00 PM', '8:00 PM', '9:00 PM'];
-
-const STEP_LABELS = ['Your info', 'Pick a date', 'Deposit', 'Booked'];
-
-type DayOption = { key: string; dow: string; md: string };
-type Lead = { name: string; phone: string; email: string; goal: string };
-type FieldErrors = Partial<Record<'name' | 'phone' | 'email', string>>;
-
-function buildDays(): DayOption[] {
-  const out: DayOption[] = [];
-  const d = new Date();
-  while (out.length < 6) {
-    d.setDate(d.getDate() + 1);
-    out.push({
-      key: `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`,
-      dow: d.toLocaleDateString('en-US', { weekday: 'short' }),
-      md: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-    });
-  }
-  return out;
-}
-
 function smoothScrollTo(e: React.MouseEvent<HTMLAnchorElement>, id: string) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -132,108 +101,8 @@ function smoothScrollTo(e: React.MouseEvent<HTMLAnchorElement>, id: string) {
 }
 
 export default function KkClient() {
-  const [step, setStep] = useState(1);
   const [menuOpen, setMenuOpen] = useState(false);
   const [heroMuted, setHeroMuted] = useState(true);
-  const [lead, setLead] = useState<Lead>({ name: '', phone: '', email: '', goal: GOALS[0] });
-  const [errors, setErrors] = useState<FieldErrors>({});
-  const [days, setDays] = useState<DayOption[]>([]);
-  const [day, setDay] = useState<DayOption | null>(null);
-  const [slot, setSlot] = useState('');
-  const [slotError, setSlotError] = useState('');
-  const [depositBusy, setDepositBusy] = useState(false);
-  const [depositError, setDepositError] = useState('');
-  const [demoNote, setDemoNote] = useState(false);
-
-  useEffect(() => {
-    const d = buildDays();
-    setDays(d);
-    setDay(d[0] ?? null);
-  }, []);
-
-  useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('booked') === '1') setStep(4);
-  }, []);
-
-  function validateLead(): boolean {
-    const next: FieldErrors = {};
-    if (!lead.name.trim()) next.name = 'Please enter your full name.';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(lead.email.trim())) next.email = 'Please enter a valid email address.';
-    if (lead.phone.replace(/\D/g, '').length < 10) next.phone = 'Please enter a valid mobile number.';
-    setErrors(next);
-    return Object.keys(next).length === 0;
-  }
-
-  function bookExperience(e: React.MouseEvent<HTMLAnchorElement>, goal: string) {
-    setLead((prev) => ({ ...prev, goal }));
-    setStep(1);
-    smoothScrollTo(e, 'book');
-  }
-
-  function submitLead(e: React.FormEvent) {
-    e.preventDefault();
-    if (!validateLead()) return;
-    setStep(2);
-  }
-
-  function confirmSlot(e: React.FormEvent) {
-    e.preventDefault();
-    if (!slot) {
-      setSlotError('Please choose a start time to continue.');
-      return;
-    }
-    setSlotError('');
-    setStep(3);
-  }
-
-  const when = day ? `${day.dow}, ${day.md} at ${slot}` : slot;
-
-  async function payDeposit() {
-    if (depositBusy) return;
-    setDepositBusy(true);
-    setDepositError('');
-    try {
-      const res = await fetch('/api/checkout/kbsetup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          plan: 'deposit',
-          source: 'kk',
-          experience: lead.goal,
-          when,
-          name: lead.name,
-          email: lead.email,
-          phone: lead.phone,
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data.url) {
-        window.location.href = data.url;
-        return;
-      }
-      if (res.status === 402) {
-        setDemoNote(true);
-        setStep(4);
-        return;
-      }
-      setDepositError(data.error || 'Checkout could not start. Please try again.');
-      setDepositBusy(false);
-    } catch {
-      setDepositError('Network error. Please check your connection and try again.');
-      setDepositBusy(false);
-    }
-  }
-
-  function resetFunnel() {
-    setStep(1);
-    setLead({ name: '', phone: '', email: '', goal: GOALS[0] });
-    setErrors({});
-    setSlot('');
-    setSlotError('');
-    setDepositBusy(false);
-    setDemoNote(false);
-    setDay(days[0] ?? null);
-  }
 
   return (
     <main style={{ background: INK, color: TEXT, fontFamily: FB, fontWeight: 300, minHeight: '100vh', overflowX: 'hidden' }}>
@@ -267,9 +136,9 @@ export default function KkClient() {
                 {label}
               </a>
             ))}
-            <a href="#book" onClick={(e) => smoothScrollTo(e, 'book')}
+            <a href="/book"
                className="kk-gold-btn" style={{ ...goldButton, padding: '10px 22px', fontSize: 12 }}>
-              Book an Event
+              Reserve a Date
             </a>
           </nav>
           {/* Mobile menu tab — only shown below the breakpoint (see kk-menu-toggle) */}
@@ -302,10 +171,10 @@ export default function KkClient() {
                 {label}
               </a>
             ))}
-            <a href="#book" className="kk-gold-btn"
-               onClick={(e) => { smoothScrollTo(e, 'book'); setMenuOpen(false); }}
+            <a href="/book" className="kk-gold-btn"
+               onClick={() => setMenuOpen(false)}
                style={{ ...goldButton, ...fullButton, marginTop: 10, fontSize: 13 }}>
-              Book an Event
+              Reserve a Date
             </a>
           </nav>
         )}
@@ -331,25 +200,24 @@ export default function KkClient() {
           maxWidth: 760, margin: '0 auto', textAlign: 'center',
           display: 'flex', flexDirection: 'column', alignItems: 'center',
         }}>
-          <Eyebrow>Kraft Kocktails · Art + Kreativity · {CONTACT.area}</Eyebrow>
+          <Eyebrow>Not a bar service · An artist at work · {CONTACT.area}</Eyebrow>
           <h1 style={{
             margin: '20px 0 0', fontFamily: FD, fontWeight: 700,
             fontSize: 'clamp(46px, 8vw, 92px)',
             lineHeight: 1.02,
           }}>
-            Handcrafted<br />
-            <span style={{ color: GOLD, fontWeight: 600 }}>Kocktail</span> experiences,<br />
-            konquered.
+            An art gallery<br />
+            in a <span style={{ color: GOLD, fontWeight: 600 }}>glass</span>.
           </h1>
           <p style={{
             margin: '24px auto 0', color: CREAM, opacity: 0.82,
-            fontSize: 'clamp(15px, 2vw, 18px)', lineHeight: 1.75, maxWidth: 540, fontWeight: 300,
+            fontSize: 'clamp(15px, 2vw, 18px)', lineHeight: 1.75, maxWidth: 560, fontWeight: 300,
           }}>
-            An art gallery in a glass. Ninety percent of what Stephen creates is emotion in the
-            moment — curated Art + Kreativity for weddings, corporate events, and private parties.
-            Custom menus, live mixology, and guided tastings, built around your night.
-            Reserve your date with a{' '}
-            <strong style={{ color: GOLD, fontWeight: 500 }}>$200 deposit</strong>.
+            You don&rsquo;t hire Stephen Simmons to pour drinks. He composes an experience out
+            of the elements already in the room — your people, your occasion, the light, the
+            spirits on hand — and builds it live, in front of them. Ninety percent of what he
+            creates is emotion in the moment. No two nights are the same, and none of them
+            are a bar.
           </p>
 
           {/* Hero video framed as an iPhone — the Mux loop plays on the
@@ -414,13 +282,13 @@ export default function KkClient() {
           </div>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginTop: 'clamp(20px, 3vw, 34px)', justifyContent: 'center' }}>
-            <a href="#book" onClick={(e) => smoothScrollTo(e, 'book')}
+            <a href="/book"
                className="kk-gold-btn" style={{ ...goldButton, padding: '15px 30px', fontSize: 13 }}>
-              Book Your Event
+              Reserve a Date
             </a>
-            <a href="#experiences" onClick={(e) => smoothScrollTo(e, 'experiences')}
+            <a href="/portfolio"
                className="kk-ghost-btn" style={{ ...ghostButton, padding: '15px 30px', fontSize: 13 }}>
-              See Experiences
+              See the Work
             </a>
           </div>
 
@@ -443,9 +311,9 @@ export default function KkClient() {
       {/* ── Experiences / packages ─────────────────────────────────── */}
       <section id="experiences" style={{ ...shell, ...sectionPad }}>
         <SectionHead
-          eyebrow="What we bring"
-          title={<>Book an <em style={{ color: GOLD }}>experience</em></>}
-          sub="Every experience is fully custom and holds your date with a $200 deposit that applies to your final balance."
+          eyebrow="The commissions"
+          title={<>Three ways to <em style={{ color: GOLD }}>compose</em></>}
+          sub="Not packages off a menu — starting points. Stephen builds each one around your room, your guests, and what the night is actually for. A $200 deposit holds the date and applies to your final balance."
         />
         <div style={{
           display: 'grid', gap: 20, marginTop: 44,
@@ -476,9 +344,9 @@ export default function KkClient() {
                     </li>
                   ))}
                 </ul>
-                <a href="#book" onClick={(e) => bookExperience(e, p.goal)}
+                <a href={`/book?experience=${p.experienceKey}`}
                    className="kk-gold-btn" style={{ ...goldButton, marginTop: 24, textAlign: 'center', padding: '14px 20px', fontSize: 12 }}>
-                  Book this — $200 deposit
+                  Check dates — $200 deposit
                 </a>
               </div>
             </article>
@@ -518,7 +386,7 @@ export default function KkClient() {
             <SectionHead
               eyebrow="From the studio"
               title={<>Signature <em style={{ color: GOLD }}>Kocktails</em></>}
-              sub="A taste of the gallery. Every event gets its own custom Kocktail list — each pour an emotion in the moment. These are house favorites."
+              sub="Standing works from the studio. Your event won’t get these — it gets its own list, composed for the occasion. These are here so you can see the hand."
             />
             <div style={{ marginTop: 32 }}>
               {MENU.map((m, i) => (
@@ -557,9 +425,9 @@ export default function KkClient() {
         }}>
           <div>
             <SectionHead
-              eyebrow="Meet the makers"
-              title={<>Kraft, <em style={{ color: GOLD }}>konquered</em></>}
-              sub="Konquered Kocktails is an art gallery in a glass. Ninety percent of what Stephen creates is emotion in the moment — curated Art + Kreativity, handcrafted into Kocktail experiences built on craft, showmanship, and intention. We bring the artistry, the tools, and the talent — you bring the guests."
+              eyebrow="The artist"
+              title={<>Intention is the <em style={{ color: GOLD }}>experience</em></>}
+              sub="Stephen Simmons is an artist whose medium happens to be a glass. He reads a room — the people in it, the occasion, the light, the spirits within reach — and composes from what’s there. That’s the difference between hiring a bartender and commissioning a piece: a bartender executes a list, an artist responds to the room. You bring the guests; he brings everything else."
             />
             <div style={{ display: 'grid', gap: 14, marginTop: 30 }}>
               <ContactRow icon="☎" label="Call or text" value={CONTACT.phone} href={`tel:${CONTACT.phone.replace(/\D/g, '')}`} />
@@ -614,180 +482,26 @@ export default function KkClient() {
         <SectionHead
           center
           eyebrow="Reserve your date"
-          title={<>Book your <em style={{ color: GOLD }}>experience</em></>}
-          sub="Tell us about your event, pick a date, and hold it with a $200 deposit — applied in full to your final balance."
+          title={<>Start with a <em style={{ color: GOLD }}>conversation</em></>}
+          sub="Stephen takes one event at a time and designs it around your room. Check the live calendar, tell him what the night is for, and hold the date with a $200 deposit — applied in full to your final balance."
         />
 
-        <div style={{ ...card, marginTop: 44, padding: 0, overflow: 'hidden', maxWidth: 760, marginLeft: 'auto', marginRight: 'auto' }}>
-          <div style={{
-            display: 'flex', gap: 10, padding: '22px 16px 20px', flexWrap: 'wrap', justifyContent: 'center',
-            borderBottom: `1px solid ${LINE}`,
-          }}>
-            {STEP_LABELS.map((label, i) => {
-              const n = i + 1;
-              const done = step > n;
-              const active = step === n;
-              return (
-                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                  <span style={{
-                    width: 26, height: 26, borderRadius: '50%', display: 'grid', placeItems: 'center',
-                    fontFamily: FB, fontSize: 12, fontWeight: 600,
-                    background: done ? `linear-gradient(180deg, ${GOLD_HI}, ${GOLD})` : active ? 'rgba(195,154,69,0.12)' : PANEL2,
-                    border: `1px solid ${done ? GOLD : active ? GOLD : LINE}`,
-                    color: done ? INK : active ? GOLD : DIM,
-                  }}>
-                    {done ? '✓' : n}
-                  </span>
-                  <span style={{
-                    fontFamily: FB, fontSize: 11, letterSpacing: '1.2px', textTransform: 'uppercase', fontWeight: 500,
-                    color: active ? TEXT : DIM,
-                  }}>
-                    {label}
-                  </span>
-                  {n < STEP_LABELS.length && <span aria-hidden="true" style={{ width: 16, height: 1, background: LINE }} />}
-                </div>
-              );
-            })}
-          </div>
-
-          <div style={{ padding: 'clamp(22px, 4vw, 36px)' }}>
-            {step === 1 && (
-              <form onSubmit={submitLead} noValidate>
-                <h3 style={stepHeading}>Tell us about your event</h3>
-                <p style={{ margin: '10px 0 0', color: MUTED, fontSize: 15, lineHeight: 1.65 }}>
-                  A few details and we’ll get your date on the Konquered Kocktails calendar.
-                </p>
-                <div style={{ display: 'grid', gap: 16, marginTop: 26, gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
-                  <Field id="kk-name" label="Full name" value={lead.name} error={errors.name}
-                    autoComplete="name" placeholder="Jordan Ellis" onChange={(v) => setLead({ ...lead, name: v })} />
-                  <Field id="kk-phone" label="Mobile number" value={lead.phone} error={errors.phone}
-                    type="tel" autoComplete="tel" placeholder="(314) 555-0142" onChange={(v) => setLead({ ...lead, phone: v })} />
-                  <Field id="kk-email" label="Email address" value={lead.email} error={errors.email}
-                    type="email" autoComplete="email" placeholder="you@example.com" onChange={(v) => setLead({ ...lead, email: v })} />
-                  <div>
-                    <label htmlFor="kk-goal" style={labelStyle}>Experience</label>
-                    <select id="kk-goal" value={lead.goal} onChange={(e) => setLead({ ...lead, goal: e.target.value })}
-                      style={{ ...inputStyle, appearance: 'none', cursor: 'pointer' }}>
-                      {GOALS.map((g) => <option key={g} value={g} style={{ background: PANEL, color: TEXT }}>{g}</option>)}
-                    </select>
-                  </div>
-                </div>
-                <button type="submit" className="kk-gold-btn" style={{ ...goldButton, ...fullButton, marginTop: 26 }}>
-                  Continue to date &amp; time
-                </button>
-                <p style={{ margin: '14px 0 0', fontSize: 12.5, color: DIM, textAlign: 'center' }}>
-                  By continuing you agree to be contacted about your event.
-                </p>
-              </form>
-            )}
-
-            {step === 2 && (
-              <form onSubmit={confirmSlot}>
-                <h3 style={stepHeading}>Pick your event date</h3>
-                <p style={{ margin: '10px 0 0', color: MUTED, fontSize: 15, lineHeight: 1.65 }}>
-                  Live availability. Dates disappear the moment another host books them.
-                </p>
-                <fieldset style={fieldsetStyle}>
-                  <legend style={legendStyle}>Choose a date</legend>
-                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                    {days.map((d) => {
-                      const on = day?.key === d.key;
-                      return (
-                        <button key={d.key} type="button" aria-pressed={on} onClick={() => { setDay(d); setSlot(''); }}
-                          style={{ ...chipStyle, minWidth: 78, background: on ? 'rgba(195,154,69,0.14)' : PANEL2, borderColor: on ? GOLD : LINE, color: on ? TEXT : MUTED }}>
-                          <span style={{ display: 'block', fontFamily: FB, fontSize: 10.5, letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.75 }}>{d.dow}</span>
-                          <span style={{ display: 'block', fontFamily: FB, fontSize: 19, fontWeight: 600, marginTop: 2 }}>{d.md}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </fieldset>
-                <fieldset style={fieldsetStyle}>
-                  <legend style={legendStyle}>Available start times</legend>
-                  <div style={{ display: 'grid', gap: 10, gridTemplateColumns: 'repeat(auto-fit, minmax(104px, 1fr))' }}>
-                    {SLOTS.map((s) => {
-                      const on = slot === s;
-                      return (
-                        <button key={s} type="button" aria-pressed={on} onClick={() => { setSlot(s); setSlotError(''); }}
-                          style={{ ...chipStyle, padding: '13px 10px', fontSize: 14.5, fontWeight: 500, background: on ? 'rgba(195,154,69,0.14)' : PANEL2, borderColor: on ? GOLD : LINE, color: on ? TEXT : MUTED }}>
-                          {s}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </fieldset>
-                {slotError && <p role="alert" style={errorTextStyle}>{slotError}</p>}
-                <div style={{ display: 'flex', gap: 12, marginTop: 24, flexWrap: 'wrap' }}>
-                  <button type="button" onClick={() => setStep(1)} className="kk-ghost-btn" style={{ ...ghostButton, padding: '15px 22px' }}>← Back</button>
-                  <button type="submit" className="kk-gold-btn" style={{ ...goldButton, flex: 1, minWidth: 200, padding: '15px 22px' }}>Continue to deposit</button>
-                </div>
-              </form>
-            )}
-
-            {step === 3 && (
-              <div>
-                <h3 style={stepHeading}>Confirm &amp; secure your date</h3>
-                <p style={{ margin: '10px 0 0', color: MUTED, fontSize: 15, lineHeight: 1.65 }}>
-                  Your event date is held for 15 minutes while you complete the deposit.
-                </p>
-                <div style={{ marginTop: 24, padding: 20, borderRadius: 12, background: PANEL2, border: `1px solid ${LINE}` }}>
-                  <SummaryRow label="Name" value={lead.name} />
-                  <SummaryRow label="Experience" value={lead.goal} />
-                  <SummaryRow label="Event date" value={when} last />
-                </div>
-                <div style={{ marginTop: 16, padding: 22, borderRadius: 12, background: 'rgba(195,154,69,0.06)', border: `1px solid ${LINE2}` }}>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
-                    <span style={{ fontFamily: FD, fontWeight: 700, fontSize: 42, color: GOLD, lineHeight: 1 }}>$200</span>
-                    <span style={{ fontSize: 15, color: TEXT, fontWeight: 500 }}>event deposit</span>
-                  </div>
-                  <p style={{ margin: '12px 0 0', fontSize: 14.5, color: MUTED, lineHeight: 1.65 }}>
-                    Applied in full to your final event balance. It reserves your date and covers prep & materials.
-                  </p>
-                </div>
-                <button type="button" onClick={payDeposit} disabled={depositBusy} className="kk-gold-btn"
-                  style={{ ...goldButton, ...fullButton, marginTop: 22, opacity: depositBusy ? 0.6 : 1, cursor: depositBusy ? 'wait' : 'pointer' }}>
-                  {depositBusy ? 'Opening secure checkout…' : 'Pay $200 deposit'}
-                </button>
-                {depositError && <p role="alert" style={{ ...errorTextStyle, marginTop: 12, textAlign: 'center' }}>{depositError}</p>}
-                <div style={{ display: 'flex', gap: 12, marginTop: 12, flexWrap: 'wrap' }}>
-                  <button type="button" onClick={() => setStep(2)} className="kk-ghost-btn" style={{ ...ghostButton, padding: '13px 22px' }}>← Change date</button>
-                </div>
-                <p style={{ margin: '16px 0 0', fontFamily: FB, fontSize: 11, color: DIM, textAlign: 'center', letterSpacing: '0.6px' }}>
-                  ✦ Secured by Stripe · Your card details never touch our servers.
-                </p>
-              </div>
-            )}
-
-            {step === 4 && (
-              <div style={{ textAlign: 'center', padding: '10px 0' }}>
-                <div style={{
-                  width: 68, height: 68, borderRadius: '50%', margin: '0 auto',
-                  display: 'grid', placeItems: 'center', fontSize: 30,
-                  background: `linear-gradient(180deg, ${GOLD_HI}, ${GOLD})`, color: INK,
-                }}>✓</div>
-                <h3 style={{ ...stepHeading, margin: '22px 0 0', fontSize: 'clamp(30px, 4.4vw, 42px)' }}>
-                  Your date is booked
-                </h3>
-                <p style={{ margin: '12px 0 0', color: MUTED, fontSize: 15.5, lineHeight: 1.65 }}>
-                  Konquered Kocktails will be in touch to lock your custom menu. Your deposit is confirmed.
-                </p>
-                <div style={{ marginTop: 26, padding: 20, borderRadius: 12, textAlign: 'left', background: PANEL2, border: `1px solid ${LINE}` }}>
-                  <SummaryRow label="Experience" value={lead.goal} />
-                  <SummaryRow label="Event date" value={when} />
-                  <SummaryRow label="Deposit" value="$200 — applied to your final balance" />
-                  <SummaryRow label="Confirmation to" value={lead.email || 'your email'} last />
-                </div>
-                {demoNote && (
-                  <p style={{ margin: '16px 0 0', fontFamily: FB, fontSize: 11, letterSpacing: '0.5px', color: GOLD, lineHeight: 1.6 }}>
-                    Demo mode — no live charge. Deposits go live once the Stripe account is connected.
-                  </p>
-                )}
-                <button type="button" onClick={resetFunnel} className="kk-ghost-btn" style={{ ...ghostButton, marginTop: 22, padding: '13px 26px' }}>
-                  Book another event
-                </button>
-              </div>
-            )}
-          </div>
+        <div style={{
+          ...card, marginTop: 44, maxWidth: 620, marginLeft: 'auto', marginRight: 'auto',
+          padding: 'clamp(26px, 4vw, 40px)', textAlign: 'center',
+        }}>
+          <span style={{ fontFamily: FD, fontWeight: 700, fontSize: 46, color: GOLD, lineHeight: 1 }}>$200</span>
+          <p style={{ margin: '10px 0 0', fontFamily: FB, fontSize: 13.5, color: MUTED, lineHeight: 1.65, fontWeight: 300 }}>
+            holds your date · refundable up to 14 days out · licensed &amp; insured
+          </p>
+          <a href="/book" className="kk-gold-btn"
+             style={{ ...goldButton, ...fullButton, marginTop: 26 }}>
+            Check Available Dates &rarr;
+          </a>
+          <p style={{ margin: '18px 0 0', fontFamily: FB, fontSize: 12.5, color: DIM, lineHeight: 1.7 }}>
+            Rather talk it through?{' '}
+            <a href={`tel:${CONTACT.phone.replace(/\D/g, '')}`} className="kk-contact" style={{ color: GOLD, textDecoration: 'none' }}>{CONTACT.phone}</a>
+          </p>
         </div>
       </section>
       </div>

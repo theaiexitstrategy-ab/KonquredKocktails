@@ -33,6 +33,55 @@ export const LINE2 = 'rgba(195,154,69,0.30)';  // stronger gold hairline
 export const FD = '"Cormorant Garamond", "Times New Roman", Georgia, serif';
 export const FB = '"Outfit", system-ui, -apple-system, sans-serif';
 
+/* The bookable experiences. `key` is the stable `experience_key` sent to the
+   portal (availability rules and bookings are keyed on it); `name` is what
+   the guest sees and what lands on the Stripe line item. Keep these keys in
+   sync with the portal's availability_rules.experience_key — renaming one
+   here silently detaches its availability. */
+export const EXPERIENCES: {
+  key: string;
+  name: string;
+  tagline: string;
+  duration: string;
+}[] = [
+  {
+    key: 'kustom_mixology',
+    name: 'The Kustom Mixology Experience',
+    tagline: 'A drink list composed for your room, poured live',
+    duration: 'about 2.5 hours',
+  },
+  {
+    key: 'spirits_tasting',
+    name: 'Spirits & Kocktail Tasting',
+    tagline: 'A guided tasting, with a profile kit to take home',
+    duration: 'about 2 hours',
+  },
+  {
+    key: 'kreative_wedding',
+    name: 'Full-Service Kreative Experience — Wedding',
+    tagline: 'The full install: bar, drinks, and the art around it',
+    duration: '4+ hours',
+  },
+  {
+    key: 'kreative_corporate',
+    name: 'Full-Service Kreative Experience — Corporate',
+    tagline: 'Built for a room that needs to remember it',
+    duration: '3+ hours',
+  },
+  {
+    key: 'kreative_private',
+    name: 'Full-Service Kreative Experience — Private Party',
+    tagline: 'Your space, reimagined for the evening',
+    duration: '3+ hours',
+  },
+  {
+    key: 'masterclass',
+    name: 'Kocktail Masterclass',
+    tagline: 'Hands-on — your guests build it themselves',
+    duration: 'about 2 hours',
+  },
+];
+
 /* Shared contact block — used by both pages' footers. */
 export const CONTACT = {
   phone: '(314) 503-9198',
