@@ -13,9 +13,9 @@ import {
   GARNET, AMETHYST, CREAM, TEXT, MUTED, DIM, LINE, LINE2, FD, FB, CONTACT,
 } from './theme';
 
-import {
-  ExperienceCollection, ExperienceJourney, JourneyIntro, BeginTheConversation,
-} from './components/ExperienceCollection';
+import { BeginTheConversation } from './components/ExperienceCollection';
+import DrinkOfTheWeek from './components/DrinkOfTheWeek';
+import { EXPERIENCE_COLLECTION } from '@/data/experiences';
 
 /* Videos are hosted on Mux — nothing lives in the repo. The <mux-player>
    custom element can't render during SSR, so load it client-side only. */
@@ -30,8 +30,8 @@ const MENU_VIDEO_ID = 'aJAE59oLfQgbyWqAY1cs9avjbrCg6FsIJunL8cNr5nw';      // "Fr
    A target starting with '/' is a real route (rendered as a plain link);
    anything else is an on-page section id that smooth-scrolls. */
 const NAV_LINKS: [string, string][] = [
-  ['Experiences', 'experiences'],
-  ['Menu', 'menu'],
+  ['Experiences', '/experiences'],
+  ['This Week', 'menu'],
   ['About', 'about'],
   ['Event Log', '/portfolio'],
   ['Reviews', '/reviews'],
@@ -41,22 +41,6 @@ const NAV_LINKS: [string, string][] = [
 const isRoute = (target: string) => target.startsWith('/');
 
 /* ── Real Konquered Kocktails content (verbatim from the live page) ── */
-
-const MENU = [
-  {
-    name: 'Nearest to Happiness',
-    build: '1.5 oz Uncle Nearest 1856 · ½ oz Lillet Rouge · ½ oz lemon · ½ oz simple · 3–4 blueberries',
-  },
-  {
-    name: 'Konquered Sour',
-    build: '2 oz bourbon · ¾ oz fresh lemon · ½ oz barrel-aged maple · ½ oz Big O Ginger Liqueur · egg white',
-    signature: true,
-  },
-  {
-    name: "Uncle's Spiced Side Car",
-    build: '2 oz Uncle Nearest 1856 · ½ oz Big O Ginger Liqueur · ½ oz orange curaçao · ½ oz lemon · ¼ oz simple',
-  },
-];
 
 function smoothScrollTo(e: React.MouseEvent<HTMLAnchorElement>, id: string) {
   const el = document.getElementById(id);
@@ -273,28 +257,48 @@ export default function KkClient() {
 
       <GoldDivider />
 
-      {/* ── The Experience Collection ──────────────────────── */}
-      {/* Renders entirely from data/experiences.ts — pricing lives there. */}
+      {/* ── Experience Collection teaser ───────────────────── */}
+      {/* The collection itself lives at /experiences, which leads with a lead
+          capture. Duplicating the seven offerings here would split the page
+          that is meant to convert, so this only names them and links out. */}
       <section id="experiences" style={{ ...shell, ...sectionPad }}>
         <SectionHead
           eyebrow="The Experience Collection"
           title={<>Kocktails as a <em style={{ color: GOLD }}>medium</em></>}
-          sub="Seven ways into the work — from a single Kustom expression to a full on-site experience designed around your people, your atmosphere, and the story you are gathering to share."
+          sub="Seven ways into the work — from a single Kustom expression to a full on-site experience composed around your people, your atmosphere, and the story you are gathering to share."
         />
-        <ExperienceCollection />
-      </section>
 
-      <GoldDivider />
+        <ul style={{
+          listStyle: 'none', margin: 'clamp(28px, 4vw, 42px) 0 0', padding: 0,
+          display: 'grid', gap: 'clamp(10px, 1.6vw, 14px)',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+        }}>
+          {EXPERIENCE_COLLECTION.map((x) => (
+            <li key={x.slug}>
+              <a href={`/experiences#collection`} className="kk-card" style={{
+                display: 'block', textDecoration: 'none',
+                background: PANEL, border: `1px solid ${LINE}`, borderRadius: 14,
+                padding: '18px 20px',
+              }}>
+                <span style={{ display: 'block', fontFamily: FD, fontWeight: 700, fontSize: 21, lineHeight: 1.2, color: TEXT }}>
+                  {x.title}
+                </span>
+                <span style={{ display: 'block', fontFamily: FB, fontSize: 12.5, color: MUTED, marginTop: 5, lineHeight: 1.5, fontWeight: 300 }}>
+                  {x.tagline}
+                </span>
+                <span style={{ display: 'block', fontFamily: FB, fontSize: 11.5, color: GOLD, marginTop: 8, letterSpacing: '0.4px', fontWeight: 500 }}>
+                  {x.tiers ? `Budget minimums from ${x.tiers[0].budgetMinimum}` : x.investment}
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
 
-      {/* ── The Konquered Experience Journey ────────────────── */}
-      <section id="journey" style={{ ...shell, ...sectionPad }}>
-        <SectionHead
-          eyebrow="The Konquered Experience Journey"
-          title={<>Five movements, one <em style={{ color: GOLD }}>intention</em></>}
-          sub="Every experience follows the same arc, whatever its scale."
-        />
-        <JourneyIntro />
-        <ExperienceJourney />
+        <div style={{ textAlign: 'center', marginTop: 'clamp(24px, 3.4vw, 34px)' }}>
+          <a href="/experiences" className="kk-gold-btn" style={goldButton}>
+            See the Full Collection
+          </a>
+        </div>
       </section>
 
       <GoldDivider />
@@ -328,31 +332,10 @@ export default function KkClient() {
           <div>
             <SectionHead
               eyebrow="From the studio"
-              title={<>Signature <em style={{ color: GOLD }}>Kocktails</em></>}
-              sub="Standing works from the studio. Your event won’t get these — it gets its own list, composed for the occasion. These are here so you can see the hand."
+              title={<>This week&rsquo;s <em style={{ color: GOLD }}>pours</em></>}
+              sub="What Stephen is building right now. The board changes week to week — your event won’t get these, it gets its own list, composed for the occasion. These are here so you can see the hand."
             />
-            <div style={{ marginTop: 32 }}>
-              {MENU.map((m, i) => (
-                <div key={m.name} style={{ padding: '20px 0', borderBottom: i < MENU.length - 1 ? `1px solid ${LINE}` : 'none' }}>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
-                    <h3 style={{ margin: 0, fontFamily: FD, fontWeight: 700, fontSize: 26, color: TEXT }}>
-                      {m.name}
-                    </h3>
-                    {m.signature && (
-                      <span style={{
-                        fontFamily: FB, fontSize: 9.5, letterSpacing: '1.6px', textTransform: 'uppercase', fontWeight: 600,
-                        color: INK, background: `linear-gradient(180deg, ${GOLD_HI}, ${GOLD})`, borderRadius: 999, padding: '4px 10px',
-                      }}>
-                        House signature
-                      </span>
-                    )}
-                  </div>
-                  <p style={{ margin: '8px 0 0', fontSize: 14, color: MUTED, lineHeight: 1.6, fontFamily: FB, fontWeight: 300 }}>
-                    {m.build}
-                  </p>
-                </div>
-              ))}
-            </div>
+            <DrinkOfTheWeek />
           </div>
         </div>
       </section>

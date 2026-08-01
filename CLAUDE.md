@@ -33,13 +33,25 @@ Usage guidance: Warm Black / Deep Emerald for backgrounds, Cream Highlight for b
 ## Site structure
 1. Header nav: Experiences | Menu | About | Event Log | Reviews | Shop | **Reserve a Date**
 2. Hero — "An art gallery in a glass." CTAs: Reserve a Date / See the Work
-3. **The Experience Collection** (#experiences) — 7 offerings with public pricing, rendered from `data/experiences.ts`
-4. **The Konquered Experience Journey** (#journey) — Discover → Design → Refine → Experience → Legacy
-5. Signature Kocktails (#menu) — standing works from the studio; your event gets its own list
+3. Experience Collection **teaser** (#experiences) — names the 7 offerings and links to `/experiences`. Not duplicated here.
+4. **This week's pours** (#menu) — the portal-driven weekly drink board
 6. About (#about) — the artist
 7. #book — the **Begin the Conversation** CTA, linking to `/book`. **The homepage does not take bookings.**
 
-## The Experience Collection
+## /experiences — the Experience Collection page
+Lead capture first, then the Journey, then the 7 offerings. The order is deliberate: details are captured while intent is highest, and the Journey earns the prices that follow.
+
+- `POST /api/subscribe` → records SMS consent, then forwards the lead to the portal. A portal failure does NOT fail the request (the visitor already gave their details); a **consent** failure DOES, because texting someone whose consent we failed to record is the one unacceptable outcome.
+- **No SMS is sent.** `clients.twilio_phone_number` is NULL for this tenant — there is no number to send from. Consent is banked so the welcome text can fire once one is provisioned. Do not add a send that runs before consent is durably stored.
+- Consent lives in `public.sms_consents`, insert-only for anon, storing the **verbatim disclosure** shown rather than a boolean. Changing `SMS_CONSENT_TEXT` changes what future visitors agree to; it never alters an existing record. Revocation is a new row with `granted = false`, never a mutation.
+- **Privacy and Terms pages do not exist yet.** The consent copy deliberately does not link them (a dead link in a legal disclosure is worse than none). They are a hard prerequisite for A2P 10DLC registration — the texting number cannot be approved without them.
+
+## This week's pours (`/#menu`)
+`public.client_signature_drinks`, read via `GET /api/drinks`, max 5, ordered by `sort_order`. One row may carry `is_feature` (enforced unique per tenant by a partial index) and renders larger as the Drink of the Week. `zero_proof` badges the row. Falls back to three seeded house drinks on any failure — a menu showing nothing is worse than one showing last week's.
+
+The portal has no Drinks tab yet, so the table is edited by hand today. The site already reads it, so that tab is purely a UI job — no contract change needed.
+
+## The Experience Collection data
 `data/experiences.ts` is the single source of truth for offerings and pricing — a price change is a one-line edit there and nothing else. `app/components/ExperienceCollection.tsx` renders it.
 
 - One flagship (Signature Kraft Kocktail Experience) with 4 tiered expressions in a real `<table>`; six single-price offerings in a grid.
