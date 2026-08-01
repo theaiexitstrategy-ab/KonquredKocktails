@@ -44,6 +44,11 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* no-page-custom-font warns that a font added outside
+            pages/_document.js loads for only one page. That's a Pages Router
+            rule: this IS the App Router root layout, so the stylesheet
+            applies to every route — which is what the rule is asking for. */}
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
           href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"

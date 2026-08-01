@@ -13,6 +13,10 @@ import {
   GARNET, AMETHYST, CREAM, TEXT, MUTED, DIM, LINE, LINE2, FD, FB, CONTACT,
 } from './theme';
 
+import {
+  ExperienceCollection, ExperienceJourney, JourneyIntro, BeginTheConversation,
+} from './components/ExperienceCollection';
+
 /* Videos are hosted on Mux — nothing lives in the repo. The <mux-player>
    custom element can't render during SSR, so load it client-side only. */
 const MuxPlayer = dynamic(() => import('@mux/mux-player-react'), { ssr: false });
@@ -37,46 +41,6 @@ const NAV_LINKS: [string, string][] = [
 const isRoute = (target: string) => target.startsWith('/');
 
 /* ── Real Konquered Kocktails content (verbatim from the live page) ── */
-
-const PACKAGES = [
-  {
-    accent: GOLD,
-    img: '/images/kk/bourbon-bar.jpeg',
-    name: 'The Kustom Mixology Experience',
-    tagline: 'Our signature private event',
-    bullets: [
-      'Custom Kocktail list built for your event',
-      '2.5 hours of kustom mixology, live',
-      'Handcrafted, themed Kocktails all night',
-    ],
-    experienceKey: 'kustom_mixology',
-  },
-  {
-    accent: GOLD,
-    img: '/images/kk/signature-sour.png',
-    imgContain: true,
-    name: 'Spirits & Kocktail Tasting',
-    tagline: 'A guided tasting for the curious',
-    bullets: [
-      'Custom spirits & cocktail tasting',
-      'Personalized tasting profile kit',
-      'Thoughtfully paired snacks',
-    ],
-    experienceKey: 'spirits_tasting',
-  },
-  {
-    accent: GOLD,
-    img: '/images/kk/live-mixology.jpg',
-    name: 'Full-Service Kreative Experience',
-    tagline: 'Weddings, corporate & private parties',
-    bullets: [
-      'We bring the artistry, tools & talent to you',
-      'Signature Kocktails tailored to your event',
-      'Professional, curated Kreative service',
-    ],
-    experienceKey: 'kreative_private',
-  },
-];
 
 const MENU = [
   {
@@ -309,50 +273,28 @@ export default function KkClient() {
 
       <GoldDivider />
 
-      {/* ── Experiences / packages ─────────────────────────────────── */}
+      {/* ── The Experience Collection ──────────────────────── */}
+      {/* Renders entirely from data/experiences.ts — pricing lives there. */}
       <section id="experiences" style={{ ...shell, ...sectionPad }}>
         <SectionHead
-          eyebrow="The commissions"
-          title={<>Three ways to <em style={{ color: GOLD }}>compose</em></>}
-          sub="Not packages off a menu — starting points. Stephen builds each one around your room, your guests, and what the night is actually for. A $200 deposit holds the date and applies to your final balance."
+          eyebrow="The Experience Collection"
+          title={<>Kocktails as a <em style={{ color: GOLD }}>medium</em></>}
+          sub="Seven ways into the work — from a single Kustom expression to a full on-site experience designed around your people, your atmosphere, and the story you are gathering to share."
         />
-        <div style={{
-          display: 'grid', gap: 20, marginTop: 44,
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-        }}>
-          {PACKAGES.map((p) => (
-            <article key={p.name} className="kk-card" style={{ ...card, padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-              <div style={{ position: 'relative', width: '100%', height: 210, background: PANEL2 }}>
-                <Image src={p.img} alt={p.name} fill sizes="(max-width: 700px) 100vw, 380px"
-                  style={{ objectFit: p.imgContain ? 'contain' : 'cover', objectPosition: 'center' }} />
-                <div aria-hidden="true" style={{
-                  position: 'absolute', inset: 0,
-                  background: 'linear-gradient(180deg, transparent 40%, rgba(10,10,10,0.55) 100%)',
-                }} />
-              </div>
-              <div style={{ padding: 26, display: 'flex', flexDirection: 'column', flex: 1 }}>
-                <span style={{ fontFamily: FB, fontSize: 11, letterSpacing: '1.8px', textTransform: 'uppercase', color: GOLD, fontWeight: 500 }}>
-                  {p.tagline}
-                </span>
-                <h3 style={{ margin: '10px 0 0', fontFamily: FD, fontWeight: 700, fontSize: 28, lineHeight: 1.14 }}>
-                  {p.name}
-                </h3>
-                <ul style={{ margin: '16px 0 0', padding: 0, listStyle: 'none', display: 'grid', gap: 10 }}>
-                  {p.bullets.map((b) => (
-                    <li key={b} style={{ display: 'flex', gap: 10, fontSize: 14.5, color: MUTED, lineHeight: 1.5 }}>
-                      <span aria-hidden="true" style={{ color: GOLD, flexShrink: 0 }}>◆</span>
-                      {b}
-                    </li>
-                  ))}
-                </ul>
-                <a href={`/book?experience=${p.experienceKey}`}
-                   className="kk-gold-btn" style={{ ...goldButton, marginTop: 24, textAlign: 'center', padding: '14px 20px', fontSize: 12 }}>
-                  Check dates — $200 deposit
-                </a>
-              </div>
-            </article>
-          ))}
-        </div>
+        <ExperienceCollection />
+      </section>
+
+      <GoldDivider />
+
+      {/* ── The Konquered Experience Journey ────────────────── */}
+      <section id="journey" style={{ ...shell, ...sectionPad }}>
+        <SectionHead
+          eyebrow="The Konquered Experience Journey"
+          title={<>Five movements, one <em style={{ color: GOLD }}>intention</em></>}
+          sub="Every experience follows the same arc, whatever its scale."
+        />
+        <JourneyIntro />
+        <ExperienceJourney />
       </section>
 
       <GoldDivider />
@@ -428,7 +370,7 @@ export default function KkClient() {
             <SectionHead
               eyebrow="The artist"
               title={<>Intention is the <em style={{ color: GOLD }}>experience</em></>}
-              sub="Stephen Simmons is an artist whose medium happens to be a glass. He reads a room — the people in it, the occasion, the light, the spirits within reach — and composes from what’s there. That’s the difference between hiring a bartender and commissioning a piece: a bartender executes a list, an artist responds to the room. You bring the guests; he brings everything else."
+              sub="Stephen Simmons is an artist whose medium happens to be a glass. He reads a room — the people in it, the occasion, the light, the spirits within reach — and composes from what’s there. That is the difference between hiring a service and commissioning a piece: a service executes a list, an artist responds to the room. Culinary artistry and intentional hospitality, moving together. You bring the guests; he brings everything else."
             />
             <div style={{ display: 'grid', gap: 14, marginTop: 30 }}>
               <ContactRow icon="☎" label="Call or text" value={CONTACT.phone} href={`tel:${CONTACT.phone.replace(/\D/g, '')}`} />
@@ -473,37 +415,20 @@ export default function KkClient() {
         </div>
       </section>
 
-      {/* ── Booking funnel — on a full-bleed Deep Emerald band ───────── */}
+      {/* ── Begin the Conversation — on a full-bleed Deep Emerald band ── */}
       <div style={{
         background: `linear-gradient(180deg, ${EMERALD} 0%, ${EMERALD_D} 100%)`,
         borderTop: `1px solid ${LINE2}`, borderBottom: `1px solid ${LINE2}`,
         marginTop: 'clamp(24px, 4vw, 44px)',
       }}>
+      {/* TODO(Aaron): confirm deposit model — copy says 50%, current flow charges $200 flat.
+          The Experience Collection copy promises "a signed agreement and 50%
+          non-refundable deposit begin the design process", but /book takes a
+          flat $200. Reconciling them means changing the charge amount, which
+          now lives PORTAL-SIDE in api/external/experience-deposit.js — not in
+          this repo. Deliberately untouched here; needs your decision. */}
       <section id="book" style={{ ...shell, ...sectionPad, paddingBottom: 'clamp(40px, 6vw, 72px)' }}>
-        <SectionHead
-          center
-          eyebrow="Reserve your date"
-          title={<>Start with a <em style={{ color: GOLD }}>conversation</em></>}
-          sub="Stephen takes one event at a time and designs it around your room. Check the live calendar, tell him what the night is for, and hold the date with a $200 deposit — applied in full to your final balance."
-        />
-
-        <div style={{
-          ...card, marginTop: 44, maxWidth: 620, marginLeft: 'auto', marginRight: 'auto',
-          padding: 'clamp(26px, 4vw, 40px)', textAlign: 'center',
-        }}>
-          <span style={{ fontFamily: FD, fontWeight: 700, fontSize: 46, color: GOLD, lineHeight: 1 }}>$200</span>
-          <p style={{ margin: '10px 0 0', fontFamily: FB, fontSize: 13.5, color: MUTED, lineHeight: 1.65, fontWeight: 300 }}>
-            holds your date · refundable up to 14 days out · licensed &amp; insured
-          </p>
-          <a href="/book" className="kk-gold-btn"
-             style={{ ...goldButton, ...fullButton, marginTop: 26 }}>
-            Check Available Dates &rarr;
-          </a>
-          <p style={{ margin: '18px 0 0', fontFamily: FB, fontSize: 12.5, color: DIM, lineHeight: 1.7 }}>
-            Rather talk it through?{' '}
-            <a href={`tel:${CONTACT.phone.replace(/\D/g, '')}`} className="kk-contact" style={{ color: GOLD, textDecoration: 'none' }}>{CONTACT.phone}</a>
-          </p>
-        </div>
+        <BeginTheConversation href="/book" />
       </section>
       </div>
 
