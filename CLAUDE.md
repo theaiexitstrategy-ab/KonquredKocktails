@@ -33,10 +33,24 @@ Usage guidance: Warm Black / Deep Emerald for backgrounds, Cream Highlight for b
 ## Site structure
 1. Header nav: Experiences | Menu | About | Event Log | Reviews | Shop | **Reserve a Date**
 2. Hero — "An art gallery in a glass." CTAs: Reserve a Date / See the Work
-3. Experiences (#experiences) — three starting points, not packages; each deep-links to `/book?experience=<key>`
-4. Signature Kocktails (#menu) — standing works from the studio; your event gets its own list
-5. About (#about) — the artist
-6. #book — a pitch that links to `/book`. **The homepage does not take bookings.**
+3. **The Experience Collection** (#experiences) — 7 offerings with public pricing, rendered from `data/experiences.ts`
+4. **The Konquered Experience Journey** (#journey) — Discover → Design → Refine → Experience → Legacy
+5. Signature Kocktails (#menu) — standing works from the studio; your event gets its own list
+6. About (#about) — the artist
+7. #book — the **Begin the Conversation** CTA, linking to `/book`. **The homepage does not take bookings.**
+
+## The Experience Collection
+`data/experiences.ts` is the single source of truth for offerings and pricing — a price change is a one-line edit there and nothing else. `app/components/ExperienceCollection.tsx` renders it.
+
+- One flagship (Signature Kraft Kocktail Experience) with 4 tiered expressions in a real `<table>`; six single-price offerings in a grid.
+- Pricing text is Royal Gold `#C39A45` on PANEL/PANEL2 — clears 4.5:1. Konquered Bronze `#9A633A` does **not** clear on those surfaces, so bronze is for rules and accents, never pricing.
+- **These slugs are marketing-only.** `/book` sends an `experience_key` from `app/theme.ts`, and the portal's `availability_rules` are keyed on those. The two lists do not correspond — the 7 offerings have no booking keys, so the collection CTA goes to `/book` generally rather than deep-linking. Reconciling them is an open decision.
+
+### Non-negotiable brand language
+- Never **"bartending"** — use *intentional hospitality* / *culinary artistry*.
+- Never **"book now"** or **"buy"** — use *Begin the Experience Discovery* / *Begin the Conversation*.
+- Keep capital-K styling: **Kocktail**, **Krafted**, **Kustom**.
+- Known violation, out of scope for the collection PR: `/merch` uses "Add to Cart" and an aria-label of "Buy ‹product›".
 
 ## Stack
 - Next.js 14 App Router, deployed on Vercel. Stripe (deposits). Video on Mux via `@mux/mux-player-react`.
@@ -101,6 +115,7 @@ The 402 is intentional, not a bug: without the connected account, charging would
 - Never commit raw MP4 masters to the repo or serve them un-optimized from `public/`.
 
 ## Current work log
+- 2026-08-01: Replaced the three-package Experiences block with the 7-offering **Experience Collection** (+ Journey band, + Begin the Conversation CTA), rendered from `data/experiences.ts`. Added ESLint (was never configured).
 - 2026-08-01: Added `/reviews`. Created `public.reviews` + the `event-photos` bucket. Granted `anon` EXECUTE on `public.locs_is_admin()` — four PUBLIC storage policies call it, and anon's lack of EXECUTE was erroring and blocking ALL anonymous uploads to every bucket.
 - 2026-07-29: Repositioned as artist-led. Added `/book` on real portal availability; deleted the homepage's fake calendar and retired `/api/checkout/kbsetup`. Rebuilt `/portfolio` as a filterable event log. Corrected the tenant slug to `konquered-balance`.
 - 2026-07-28: Added `/portfolio`, portal-driven with a seed fallback.
