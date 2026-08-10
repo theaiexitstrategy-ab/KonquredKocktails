@@ -426,6 +426,15 @@ export default function KkClient() {
             <div>{CONTACT.phone} · {CONTACT.email}</div>
             <div>{CONTACT.address}</div>
           </div>
+          <nav aria-label="Legal" style={{
+            display: 'flex', flexWrap: 'wrap', gap: 14,
+            fontFamily: FB, fontSize: 11, letterSpacing: '1.1px',
+            textTransform: 'uppercase', fontWeight: 500,
+          }}>
+            <a href="/privacy" className="kk-navlink" style={{ color: DIM, textDecoration: 'none' }}>Privacy</a>
+            <a href="/terms" className="kk-navlink" style={{ color: DIM, textDecoration: 'none' }}>Terms</a>
+            <a href="/sms-consent" className="kk-navlink" style={{ color: DIM, textDecoration: 'none' }}>SMS Opt-In</a>
+          </nav>
           <a href="https://goelev8.ai" className="kk-navlink" style={{
             fontFamily: FB, fontSize: 11, color: DIM, letterSpacing: '1.2px',
             textTransform: 'uppercase', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8, fontWeight: 500,
