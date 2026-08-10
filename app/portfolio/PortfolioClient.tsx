@@ -1,32 +1,32 @@
 // (c) 2026 GoElev8.ai | Aaron Bryant. All rights reserved. Unauthorized use prohibited.
 'use client';
 
-// Konquered Kocktails event log — konqueredkocktails.com/portfolio.
+// Konquered Kocktails event library — konqueredkocktails.com/portfolio.
 //
-// A running repository of every event Stephen has done, newest first, with
-// filters. Not a highlight reel and not a bartending CV: each entry is a room
-// he composed in, logged so the body of work reads as one practice.
-//
-// Portal-driven — Stephen adds an entry (video + description + the metadata
-// the filters run on) from the portal Portfolio tab, no redeploy:
+// A searchable repository of every event Stephen has composed. Built to be
+// worked in, not just browsed: full-text search across title, description,
+// venue, city and type, plus type / year / city filters and a sort. Filter
+// state lives in the URL, so Stephen can bookmark or send "every wedding in
+// 2026" as a link.
 //
 //   GET {PORTAL_URL}/api/external/portfolio?slug={PORTAL_SLUG}
 //     → { events: [{ key, title, description, playback_id, poster_url,
 //                    event_type, event_date, venue, city, guest_count,
 //                    sort_order }] }
 //
-// That endpoint does NOT exist in the portal yet. Until it ships the page
-// renders SEED_EVENTS below, so /portfolio is live and honest today and
-// switches over silently the moment the portal answers. Any failure — 404,
-// network, malformed, empty — keeps the seed on screen; a log showing
-// nothing is worse than one that's slightly behind.
+// `videos` is still accepted as the top-level key — an earlier portal build
+// shipped that shape and there's no reason to break if it comes back.
 //
-// `events` is the current key; `videos` is still accepted so an earlier
-// portal build that shipped the reel-shaped response doesn't break the page.
+// PERFORMANCE, and why cards don't mount a player up front: a library is
+// meant to grow into hundreds of entries, and hundreds of <mux-player>
+// elements would each pull their own HLS manifest. Cards show the Mux
+// thumbnail (free, one image request) and swap in the real player only when
+// someone presses play. That keeps a 300-event page as cheap as a 3-event one.
 //
-// Videos are on Mux and the playback IDs are public. Unlike the old reel
-// there is no hard cap here — it's a log, it's supposed to grow — but the
-// list renders lazily and only the first player preloads.
+// Metadata is sparse today — the portal serves the columns but they're empty,
+// so most entries have no date or venue yet. Every field renders only if
+// present rather than showing "Unknown", and the seed fills gaps only for the
+// three keys it knows. Nothing here invents a venue or a date.
 
 import Image from 'next/image';
 import Link from 'next/link';
@@ -45,28 +45,27 @@ const PORTAL_URL =
 const PORTAL_SLUG =
   process.env.NEXT_PUBLIC_PORTAL_SLUG || 'konquered-balance';
 
+/** How many render before "Show more". Keeps first paint light on a big log. */
+const PAGE = 12;
+
 type LoggedEvent = {
   key: string;
   title: string;
   description: string | null;
   playback_id: string;
   poster_url: string | null;
-  /** Filter dimension. Free text from the portal so Stephen can add a
-   *  category we haven't thought of without a deploy. */
   event_type: string | null;
-  /** 'YYYY-MM-DD'. Drives the year filter and the ordering. */
-  event_date: string | null;
+  event_date: string | null;   // YYYY-MM-DD
   venue: string | null;
   city: string | null;
   guest_count: number | null;
   sort_order: number | null;
 };
 
-/* Seed log — the three clips on record. Only `event_type` is asserted here,
-   because it's inferable from the footage itself. Dates, venues, and guest
-   counts are deliberately left null rather than invented: this page is a
-   record of real work, and a fabricated venue on it would be worse than a
-   blank field. Stephen fills them in from the portal. */
+/* Seed — the three clips on record. Only event_type is asserted, because it's
+   inferable from the footage. Dates, venues and guest counts stay null rather
+   than invented: this is a record of real work and a fabricated venue on it
+   would be worse than a blank field. */
 const SEED_EVENTS: LoggedEvent[] = [
   {
     key: 'gentleman-jack-2021',
@@ -74,26 +73,16 @@ const SEED_EVENTS: LoggedEvent[] = [
     description:
       'Featured in Jack Daniel’s Gentleman Jack 2021 Culture Shakers, a national spotlight on creators shaping their communities.',
     playback_id: 'MOxiZEb302JK1hwfkQzUQU3EDriQ401stR1CoSrTx02lq00',
-    poster_url: null,
-    event_type: 'Feature',
-    event_date: '2021-01-01',
-    venue: null,
-    city: null,
-    guest_count: null,
-    sort_order: 0,
+    poster_url: null, event_type: 'Feature', event_date: '2021-01-01',
+    venue: null, city: null, guest_count: null, sort_order: 0,
   },
   {
     key: 'behind-the-bar',
     title: 'Behind the Bar',
     description: null,
     playback_id: 'mSxkyXsJ3QPl201AEmwymMEw4iOLASE00x7zL3g9lygi4',
-    poster_url: null,
-    event_type: 'Live Mixology',
-    event_date: null,
-    venue: null,
-    city: null,
-    guest_count: null,
-    sort_order: 1,
+    poster_url: null, event_type: 'Live Mixology', event_date: null,
+    venue: null, city: null, guest_count: null, sort_order: 1,
   },
   {
     key: 'from-the-studio',
@@ -101,24 +90,37 @@ const SEED_EVENTS: LoggedEvent[] = [
     description:
       'Kraft kocktails built to order — the composition behind a Konquered Kocktails pour.',
     playback_id: 'aJAE59oLfQgbyWqAY1cs9avjbrCg6FsIJunL8cNr5nw',
-    poster_url: null,
-    event_type: 'Studio',
-    event_date: null,
-    venue: null,
-    city: null,
-    guest_count: null,
-    sort_order: 2,
+    poster_url: null, event_type: 'Studio', event_date: null,
+    venue: null, city: null, guest_count: null, sort_order: 2,
   },
 ];
 
-const ALL = '__all__';
+const ALL = '';
+
+/** Mux serves a still for any public playback id — one image instead of a
+ *  whole player per card. */
+const thumbFor = (id: string, poster: string | null) =>
+  poster || `https://image.mux.com/${id}/thumbnail.jpg?width=640&fit_mode=smartcrop`;
+
+function monthYear(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number);
+  if (!y) return '';
+  if (!m || !d) return String(y);
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
 
 export default function PortfolioClient() {
   const [events, setEvents] = useState<LoggedEvent[]>(SEED_EVENTS);
   const [live, setLive] = useState(false);
+
+  const [q, setQ] = useState('');
   const [type, setType] = useState(ALL);
   const [year, setYear] = useState(ALL);
+  const [city, setCity] = useState(ALL);
+  const [sort, setSort] = useState<'newest' | 'oldest' | 'title'>('newest');
+  const [shown, setShown] = useState(PAGE);
 
+  /* ── Load ──────────────────────────────────────────────────────── */
   const load = useCallback(async () => {
     try {
       const res = await fetch(
@@ -127,75 +129,104 @@ export default function PortfolioClient() {
       );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      const raw = Array.isArray(data?.events)
-        ? data.events
-        : Array.isArray(data?.videos)
-          ? data.videos
-          : [];
+      const raw = Array.isArray(data?.events) ? data.events
+        : Array.isArray(data?.videos) ? data.videos : [];
       const usable: LoggedEvent[] = raw.filter(
         (e: LoggedEvent) => e && typeof e.playback_id === 'string' && e.playback_id,
       );
-      if (usable.length) {
-        /* The portal is authoritative, but its first build shipped the
-           reel-shaped row (key/title/playback_id only) — no event_type,
-           date, venue, or description. Taking it verbatim would blank the
-           copy and hide the filters entirely. So: portal wins on every
-           field it actually has, and the seed fills only what the portal
-           left null, and only for keys the seed already knows. Once
-           Stephen backfills the metadata this merge stops doing anything. */
-        const seedByKey = new Map(SEED_EVENTS.map((s) => [s.key, s]));
-        setEvents(usable.map((e) => {
-          const seed = seedByKey.get(e.key);
-          if (!seed) return e;
-          return {
-            ...e,
-            description: e.description ?? seed.description,
-            event_type: e.event_type ?? seed.event_type,
-            event_date: e.event_date ?? seed.event_date,
-            venue: e.venue ?? seed.venue,
-            city: e.city ?? seed.city,
-            guest_count: e.guest_count ?? seed.guest_count,
-          };
-        }));
-        setLive(true);
-      }
+      if (!usable.length) return;
+
+      /* Portal wins on every field it has; the seed fills only what the portal
+         left null, and only for keys the seed knows. Stops mattering entirely
+         once Stephen backfills. */
+      const seedByKey = new Map(SEED_EVENTS.map((s) => [s.key, s]));
+      setEvents(usable.map((e) => {
+        const seed = seedByKey.get(e.key);
+        return seed ? {
+          ...e,
+          description: e.description ?? seed.description,
+          event_type: e.event_type ?? seed.event_type,
+          event_date: e.event_date ?? seed.event_date,
+          venue: e.venue ?? seed.venue,
+          city: e.city ?? seed.city,
+          guest_count: e.guest_count ?? seed.guest_count,
+        } : e;
+      }));
+      setLive(true);
     } catch (err) {
-      console.warn('[event-log] portal fetch failed, using seed:', err);
+      console.warn('[event-library] portal fetch failed, using seed:', err);
     }
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
-  /* Newest first. Entries with no date sort last but keep their portal
-     ordering among themselves — an undated entry is still real work. */
-  const ordered = useMemo(() => {
-    return [...events].sort((a, b) => {
-      if (a.event_date && b.event_date) return b.event_date.localeCompare(a.event_date);
-      if (a.event_date) return -1;
-      if (b.event_date) return 1;
-      return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+  /* ── Filter state <-> URL, so a view can be bookmarked or sent ──── */
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    setQ(p.get('q') ?? '');
+    setType(p.get('type') ?? ALL);
+    setYear(p.get('year') ?? ALL);
+    setCity(p.get('city') ?? ALL);
+    const s = p.get('sort');
+    if (s === 'oldest' || s === 'title' || s === 'newest') setSort(s);
+  }, []);
+
+  useEffect(() => {
+    const p = new URLSearchParams();
+    if (q) p.set('q', q);
+    if (type) p.set('type', type);
+    if (year) p.set('year', year);
+    if (city) p.set('city', city);
+    if (sort !== 'newest') p.set('sort', sort);
+    const qs = p.toString();
+    window.history.replaceState({}, '', qs ? `/portfolio?${qs}` : '/portfolio');
+    setShown(PAGE);
+  }, [q, type, year, city, sort]);
+
+  /* ── Facets ────────────────────────────────────────────────────── */
+  const types = useMemo(
+    () => [...new Set(events.map((e) => e.event_type).filter(Boolean) as string[])].sort(),
+    [events],
+  );
+  const years = useMemo(
+    () => [...new Set(events.map((e) => e.event_date?.slice(0, 4)).filter(Boolean) as string[])].sort().reverse(),
+    [events],
+  );
+  const cities = useMemo(
+    () => [...new Set(events.map((e) => e.city).filter(Boolean) as string[])].sort(),
+    [events],
+  );
+
+  /* ── Search + filter + sort ────────────────────────────────────── */
+  const results = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    const matched = events.filter((e) => {
+      if (type && e.event_type !== type) return false;
+      if (year && e.event_date?.slice(0, 4) !== year) return false;
+      if (city && e.city !== city) return false;
+      if (!needle) return true;
+      // Search everything a person would plausibly remember an event by.
+      return [e.title, e.description, e.venue, e.city, e.event_type]
+        .filter(Boolean)
+        .some((f) => (f as string).toLowerCase().includes(needle));
     });
-  }, [events]);
 
-  const types = useMemo(() => {
-    const set = new Set<string>();
-    for (const e of ordered) if (e.event_type) set.add(e.event_type);
-    return [...set].sort();
-  }, [ordered]);
+    return matched.sort((a, b) => {
+      if (sort === 'title') return a.title.localeCompare(b.title);
+      // Undated entries sort last in both directions — they're still real
+      // work, they just can't be placed on the timeline yet.
+      if (!a.event_date && !b.event_date) return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+      if (!a.event_date) return 1;
+      if (!b.event_date) return -1;
+      return sort === 'oldest'
+        ? a.event_date.localeCompare(b.event_date)
+        : b.event_date.localeCompare(a.event_date);
+    });
+  }, [events, q, type, year, city, sort]);
 
-  const years = useMemo(() => {
-    const set = new Set<string>();
-    for (const e of ordered) if (e.event_date) set.add(e.event_date.slice(0, 4));
-    return [...set].sort().reverse();
-  }, [ordered]);
-
-  const shown = useMemo(() => ordered.filter((e) => {
-    if (type !== ALL && e.event_type !== type) return false;
-    if (year !== ALL && e.event_date?.slice(0, 4) !== year) return false;
-    return true;
-  }), [ordered, type, year]);
-
-  const filtered = type !== ALL || year !== ALL;
+  const filtering = Boolean(q || type || year || city);
+  const clear = () => { setQ(''); setType(ALL); setYear(ALL); setCity(ALL); };
+  const undated = events.filter((e) => !e.event_date).length;
 
   return (
     <main style={{ background: INK, color: TEXT, fontFamily: FB, fontWeight: 300, minHeight: '100vh', overflowX: 'hidden' }}>
@@ -211,13 +242,12 @@ export default function PortfolioClient() {
                 Konquered Kocktails
               </span>
               <span style={{ display: 'block', fontFamily: FB, fontSize: 9, letterSpacing: '3px', textTransform: 'uppercase', color: GOLD, marginTop: 3, fontWeight: 500 }}>
-                Event Log
+                Event Library
               </span>
             </span>
           </Link>
           <nav style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 22 }}>
-            <Link href="/" className="kk-navlink" style={navLink}>Home</Link>
-            <Link href="/merch" className="kk-navlink" style={navLink}>Shop</Link>
+            <Link href="/experiences" className="kk-navlink" style={navLink}>Experiences</Link>
             <Link href="/book" className="kk-gold-btn" style={{ ...goldButton, padding: '10px 22px', fontSize: 12 }}>
               Reserve a Date
             </Link>
@@ -225,101 +255,113 @@ export default function PortfolioClient() {
         </div>
       </header>
 
-      {/* ── Header / practice statement ────────────────────────── */}
-      <section style={{ position: 'relative', padding: 'clamp(56px, 8vw, 96px) 20px clamp(24px, 3vw, 36px)', overflow: 'hidden' }}>
+      {/* ── Header ─────────────────────────────────────────────── */}
+      <section style={{ position: 'relative', padding: 'clamp(48px, 7vw, 84px) 20px clamp(20px, 3vw, 30px)', overflow: 'hidden' }}>
         <div aria-hidden="true" style={glowBackdrop} />
         <div className="kk-fade-up" style={{ position: 'relative', zIndex: 2, maxWidth: 1180, margin: '0 auto' }}>
-          <div style={{ maxWidth: 760 }}>
-            <span style={eyebrow}>
-              <span aria-hidden="true" style={{ width: 26, height: 1, background: `linear-gradient(90deg, ${GOLD}, transparent)` }} />
-              Stephen Simmons · The Work
-            </span>
-            <h1 style={{ margin: '20px 0 0', fontFamily: FD, fontWeight: 700, fontSize: 'clamp(40px, 7vw, 74px)', lineHeight: 1.04 }}>
-              Every room, <span style={{ color: GOLD, fontWeight: 600 }}>logged</span>.
-            </h1>
-            <p style={{ margin: '22px 0 0', color: CREAM, opacity: 0.85, fontSize: 'clamp(15px, 2vw, 17.5px)', lineHeight: 1.75, maxWidth: 640, fontWeight: 300 }}>
-              This isn&rsquo;t a bar for hire. Stephen composes a drink experience out of
-              the elements already in the room — the people, the light, the occasion, the
-              spirits on hand — and no two are the same. What follows is the record:
-              every event, as it happened.
-            </p>
-          </div>
-
-          <dl style={{
-            margin: 'clamp(32px, 4vw, 48px) 0 0', padding: 'clamp(22px, 3vw, 30px) 0 0',
-            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))',
-            gap: 'clamp(16px, 2vw, 26px)', borderTop: `1px solid ${LINE}`,
-          }}>
-            {([
-              ['Events logged', String(ordered.length)],
-              ['Based in', CONTACT.area],
-              ['Recognition', 'Gentleman Jack Culture Shakers, 2021'],
-              ['Status', 'Licensed & insured'],
-            ] as [string, string][]).map(([k, v]) => (
-              <div key={k}>
-                <dt style={{ fontFamily: FB, fontSize: 10, letterSpacing: '1.6px', textTransform: 'uppercase', color: DIM, fontWeight: 500 }}>{k}</dt>
-                <dd style={{ margin: '7px 0 0', fontFamily: FD, fontSize: 19, fontWeight: 600, color: TEXT, lineHeight: 1.3 }}>{v}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-      </section>
-
-      {/* ── Filters ────────────────────────────────────────────── */}
-      <section style={{ maxWidth: 1180, margin: '0 auto', padding: 'clamp(20px, 3vw, 32px) 20px 0' }}>
-        <div style={{
-          display: 'flex', flexWrap: 'wrap', gap: 'clamp(14px, 2vw, 26px)',
-          alignItems: 'flex-end', justifyContent: 'space-between',
-          borderTop: `1px solid ${LINE}`, paddingTop: 'clamp(20px, 3vw, 28px)',
-        }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'clamp(14px, 2vw, 26px)' }}>
-            {types.length > 1 && (
-              <FilterGroup label="Type" value={type} onChange={setType}
-                options={[[ALL, 'All'], ...types.map((t) => [t, t] as [string, string])]} />
-            )}
-            {years.length > 1 && (
-              <FilterGroup label="Year" value={year} onChange={setYear}
-                options={[[ALL, 'All'], ...years.map((y) => [y, y] as [string, string])]} />
-            )}
-          </div>
-
-          <p aria-live="polite" style={{ margin: 0, fontFamily: FB, fontSize: 12, color: DIM, letterSpacing: '0.6px' }}>
-            {shown.length} {shown.length === 1 ? 'event' : 'events'}
-            {filtered && (
-              <>
-                {' · '}
-                <button type="button" onClick={() => { setType(ALL); setYear(ALL); }} style={linkButton}>
-                  Clear filters
-                </button>
-              </>
-            )}
+          <span style={eyebrow}>
+            <span aria-hidden="true" style={{ width: 26, height: 1, background: `linear-gradient(90deg, ${GOLD}, transparent)` }} />
+            The Work · {events.length} {events.length === 1 ? 'entry' : 'entries'}
+          </span>
+          <h1 style={{ margin: '20px 0 0', fontFamily: FD, fontWeight: 700, fontSize: 'clamp(38px, 6.4vw, 70px)', lineHeight: 1.04 }}>
+            Every room, <span style={{ color: GOLD, fontWeight: 600 }}>logged</span>.
+          </h1>
+          <p style={{ margin: '20px 0 0', color: CREAM, opacity: 0.85, fontSize: 'clamp(15px, 2vw, 17px)', lineHeight: 1.75, maxWidth: 640, fontWeight: 300 }}>
+            This isn&rsquo;t a bar for hire. Stephen composes a drink experience out of
+            the elements already in the room — the people, the light, the occasion, the
+            spirits on hand. This is the record of every one.
           </p>
         </div>
       </section>
 
-      {/* ── The log ────────────────────────────────────────────── */}
-      <section style={{ maxWidth: 1180, margin: '0 auto', padding: 'clamp(22px, 3vw, 32px) 20px clamp(48px, 7vw, 84px)' }}>
-        {shown.length === 0 ? (
+      {/* ── Toolbar ────────────────────────────────────────────── */}
+      <section style={{ maxWidth: 1180, margin: '0 auto', padding: '0 20px' }}>
+        <div style={{
+          background: PANEL, border: `1px solid ${LINE}`, borderRadius: 16,
+          padding: 'clamp(16px, 2.2vw, 22px)',
+        }}>
+          <label style={{ display: 'block' }}>
+            <span style={srOnly}>Search the library</span>
+            <div style={{ position: 'relative' }}>
+              <span aria-hidden="true" style={{
+                position: 'absolute', left: 15, top: '50%', transform: 'translateY(-50%)',
+                color: DIM, fontSize: 15, pointerEvents: 'none',
+              }}>
+                ⌕
+              </span>
+              <input
+                className="kk-input"
+                type="search"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Search by name, venue, city, or type…"
+                style={{ ...inputStyle, paddingLeft: 38 }}
+              />
+            </div>
+          </label>
+
+          <div style={{
+            display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 12, alignItems: 'flex-end',
+          }}>
+            {types.length > 1 && (
+              <Select label="Type" value={type} onChange={setType}
+                options={[[ALL, 'All types'], ...types.map((t) => [t, t] as [string, string])]} />
+            )}
+            {years.length > 1 && (
+              <Select label="Year" value={year} onChange={setYear}
+                options={[[ALL, 'All years'], ...years.map((y) => [y, y] as [string, string])]} />
+            )}
+            {cities.length > 1 && (
+              <Select label="City" value={city} onChange={setCity}
+                options={[[ALL, 'All cities'], ...cities.map((c) => [c, c] as [string, string])]} />
+            )}
+            <Select label="Sort" value={sort} onChange={(v) => setSort(v as typeof sort)}
+              options={[['newest', 'Newest first'], ['oldest', 'Oldest first'], ['title', 'A–Z']]} />
+
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12, paddingBottom: 2 }}>
+              <span aria-live="polite" style={{ fontFamily: FB, fontSize: 12.5, color: MUTED, whiteSpace: 'nowrap' }}>
+                {results.length} of {events.length}
+              </span>
+              {filtering && (
+                <button type="button" onClick={clear} style={linkButton}>Clear</button>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Results ────────────────────────────────────────────── */}
+      <section style={{ maxWidth: 1180, margin: '0 auto', padding: 'clamp(20px, 3vw, 30px) 20px clamp(48px, 7vw, 84px)' }}>
+        {results.length === 0 ? (
           <div style={emptyBox}>
-            Nothing logged under that filter yet.{' '}
-            <button type="button" onClick={() => { setType(ALL); setYear(ALL); }} style={linkButton}>
-              Show everything
-            </button>
+            Nothing in the library matches that.{' '}
+            <button type="button" onClick={clear} style={linkButton}>Show everything</button>
           </div>
         ) : (
-          <div style={{
-            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
-            gap: 'clamp(20px, 2.6vw, 30px)',
-          }}>
-            {shown.map((e, i) => (
-              <EventEntry key={e.key || e.playback_id} event={e} eager={i === 0} />
-            ))}
-          </div>
+          <>
+            <div style={{
+              display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+              gap: 'clamp(18px, 2.4vw, 26px)',
+            }}>
+              {results.slice(0, shown).map((e) => <EventCard key={e.key || e.playback_id} event={e} />)}
+            </div>
+
+            {results.length > shown && (
+              <div style={{ textAlign: 'center', marginTop: 'clamp(26px, 3.6vw, 36px)' }}>
+                <button type="button" onClick={() => setShown((n) => n + PAGE)}
+                  className="kk-ghost-btn" style={ghostButton}>
+                  Show more — {results.length - shown} remaining
+                </button>
+              </div>
+            )}
+          </>
         )}
 
-        {!live && (
-          <p style={{ margin: 'clamp(28px, 4vw, 40px) 0 0', textAlign: 'center', fontSize: 12.5, color: DIM, lineHeight: 1.7 }}>
-            Stephen is still backfilling the log — dates and venues fill in as he adds them.
+        {(!live || undated > 0) && (
+          <p style={{ margin: 'clamp(26px, 3.6vw, 38px) 0 0', textAlign: 'center', fontSize: 12.5, color: DIM, lineHeight: 1.7 }}>
+            {undated > 0
+              ? `${undated} ${undated === 1 ? 'entry has' : 'entries have'} no date or venue recorded yet — Stephen is backfilling the library from the portal.`
+              : 'Stephen is still backfilling the library.'}
           </p>
         )}
       </section>
@@ -356,8 +398,8 @@ export default function PortfolioClient() {
 
 /* ── Pieces ───────────────────────────────────────────────────────── */
 
-function FilterGroup({
-  label: text, value, onChange, options,
+function Select({
+  label, value, onChange, options,
 }: {
   label: string;
   value: string;
@@ -365,42 +407,25 @@ function FilterGroup({
   options: [string, string][];
 }) {
   return (
-    <div>
-      <span style={filterLabel}>{text}</span>
-      <div role="group" aria-label={text} style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-        {options.map(([v, l]) => {
-          const on = value === v;
-          return (
-            <button key={v} type="button" onClick={() => onChange(v)} aria-pressed={on}
-              className="kk-pill"
-              style={{
-                padding: '8px 14px', borderRadius: 999, cursor: 'pointer',
-                fontFamily: FB, fontSize: 12.5, letterSpacing: '0.4px',
-                background: on ? GOLD : 'rgba(255,255,255,0.04)',
-                border: `1px solid ${on ? GOLD : LINE}`,
-                color: on ? INK : TEXT, fontWeight: on ? 600 : 400,
-              }}>
-              {l}
-            </button>
-          );
-        })}
-      </div>
-    </div>
+    <label style={{ display: 'block' }}>
+      <span style={filterLabel}>{label}</span>
+      <select className="kk-input" value={value} onChange={(e) => onChange(e.target.value)}
+        style={selectStyle}>
+        {options.map(([v, l]) => (
+          <option key={v || 'all'} value={v} style={{ background: PANEL2, color: TEXT }}>{l}</option>
+        ))}
+      </select>
+    </label>
   );
 }
 
-function EventEntry({ event: e, eager }: { event: LoggedEvent; eager: boolean }) {
-  /* Build the meta line from whatever the portal actually has. Every field
-     is optional — an entry with only a title still renders cleanly. */
+/** Thumbnail first; the player mounts only on play. See the note at the top
+ *  of this file — a library of hundreds shouldn't open hundreds of streams. */
+function EventCard({ event: e }: { event: LoggedEvent }) {
+  const [playing, setPlaying] = useState(false);
+
   const meta: string[] = [];
-  if (e.event_date) {
-    const [y, m, d] = e.event_date.split('-').map(Number);
-    meta.push(
-      m && d
-        ? new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-        : String(y),
-    );
-  }
+  if (e.event_date) meta.push(monthYear(e.event_date));
   if (e.venue) meta.push(e.venue);
   if (e.city) meta.push(e.city);
   if (e.guest_count) meta.push(`${e.guest_count} guests`);
@@ -410,18 +435,44 @@ function EventEntry({ event: e, eager }: { event: LoggedEvent; eager: boolean })
       margin: 0, background: PANEL, border: `1px solid ${LINE}`,
       borderRadius: 16, overflow: 'hidden', display: 'flex', flexDirection: 'column',
     }}>
-      <div style={{ background: '#000', lineHeight: 0 }}>
-        <MuxPlayer
-          playbackId={e.playback_id}
-          streamType="on-demand"
-          accentColor={GOLD}
-          preload={eager ? 'metadata' : 'none'}
-          playsInline
-          {...(e.poster_url ? { poster: e.poster_url } : {})}
-          metadata={{ video_title: `Konquered Kocktails — ${e.title}` }}
-          style={{ width: '100%', aspectRatio: '16 / 9', display: 'block' }}
-        />
+      <div style={{ background: '#000', lineHeight: 0, position: 'relative', aspectRatio: '16 / 9' }}>
+        {playing ? (
+          <MuxPlayer
+            playbackId={e.playback_id}
+            streamType="on-demand"
+            accentColor={GOLD}
+            autoPlay
+            playsInline
+            {...(e.poster_url ? { poster: e.poster_url } : {})}
+            metadata={{ video_title: `Konquered Kocktails — ${e.title}` }}
+            style={{ width: '100%', height: '100%', display: 'block' }}
+          />
+        ) : (
+          <button type="button" onClick={() => setPlaying(true)}
+            aria-label={`Play ${e.title}`}
+            style={{
+              width: '100%', height: '100%', padding: 0, border: 'none', cursor: 'pointer',
+              background: '#000', position: 'relative', display: 'block',
+            }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={thumbFor(e.playback_id, e.poster_url)} alt="" loading="lazy"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: 0.9 }} />
+            <span aria-hidden="true" style={{
+              position: 'absolute', inset: 0, display: 'grid', placeItems: 'center',
+            }}>
+              <span style={{
+                width: 54, height: 54, borderRadius: '50%',
+                background: `linear-gradient(180deg, ${GOLD_HI}, ${GOLD})`,
+                display: 'grid', placeItems: 'center', color: INK, fontSize: 19,
+                boxShadow: '0 8px 22px rgba(0,0,0,0.45)', paddingLeft: 4,
+              }}>
+                ▶
+              </span>
+            </span>
+          </button>
+        )}
       </div>
+
       <figcaption style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
         {e.event_type && (
           <span style={{
@@ -482,19 +533,36 @@ const eyebrow: CSSProperties = {
 };
 
 const filterLabel: CSSProperties = {
-  display: 'block', fontFamily: FB, fontSize: 10, letterSpacing: '1.6px',
-  textTransform: 'uppercase', color: DIM, marginBottom: 8, fontWeight: 500,
+  display: 'block', fontFamily: FB, fontSize: 9.5, letterSpacing: '1.6px',
+  textTransform: 'uppercase', color: DIM, marginBottom: 6, fontWeight: 500,
+};
+
+const inputStyle: CSSProperties = {
+  width: '100%', boxSizing: 'border-box', background: '#0c0b0a',
+  border: `1px solid ${LINE}`, borderRadius: 10, padding: '13px 15px',
+  color: TEXT, fontFamily: FB, fontSize: 15, outline: 'none', fontWeight: 300,
+};
+
+const selectStyle: CSSProperties = {
+  background: '#0c0b0a', border: `1px solid ${LINE}`, borderRadius: 10,
+  padding: '11px 13px', color: TEXT, fontFamily: FB, fontSize: 13.5,
+  outline: 'none', fontWeight: 300, minWidth: 132, cursor: 'pointer',
 };
 
 const linkButton: CSSProperties = {
   background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-  color: GOLD, fontFamily: FB, fontSize: 'inherit', textDecoration: 'underline',
+  color: GOLD, fontFamily: FB, fontSize: 12.5, textDecoration: 'underline',
 };
 
 const emptyBox: CSSProperties = {
   textAlign: 'center', padding: 'clamp(48px, 8vw, 88px) 24px',
   border: `1px dashed ${LINE}`, borderRadius: 16,
   color: MUTED, fontFamily: FB, fontSize: 15, lineHeight: 1.7, fontWeight: 300,
+};
+
+const srOnly: CSSProperties = {
+  position: 'absolute', width: 1, height: 1, padding: 0, margin: -1,
+  overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap', border: 0,
 };
 
 const goldButton: CSSProperties = {
@@ -507,6 +575,13 @@ const goldButton: CSSProperties = {
   boxShadow: '0 8px 22px rgba(195,154,69,0.22)',
 };
 
+const ghostButton: CSSProperties = {
+  display: 'inline-block', background: 'transparent', color: CREAM,
+  fontFamily: FB, fontWeight: 500, fontSize: 12.5, letterSpacing: '1.4px',
+  textTransform: 'uppercase', border: `1px solid ${LINE2}`, borderRadius: 999,
+  padding: '14px 26px', cursor: 'pointer', textDecoration: 'none', lineHeight: 1.2,
+};
+
 const KEYFRAMES = `
 .kk-fade-up{animation:kkFadeUp .9s .05s both}
 .kk-navlink{transition:color .2s ease}
@@ -515,10 +590,11 @@ const KEYFRAMES = `
 .kk-contact:hover{opacity:.82}
 .kk-gold-btn{transition:transform .18s ease, box-shadow .18s ease, filter .18s ease}
 .kk-gold-btn:hover{transform:translateY(-1px);filter:brightness(1.05);box-shadow:0 12px 28px rgba(195,154,69,0.34)}
+.kk-ghost-btn{transition:border-color .2s ease, color .2s ease, background .2s ease}
+.kk-ghost-btn:hover{border-color:${GOLD};color:${GOLD};background:rgba(195,154,69,0.06)}
 .kk-card{transition:transform .22s ease, border-color .22s ease}
 .kk-card:hover{transform:translateY(-3px);border-color:${LINE2}}
-.kk-pill{transition:border-color .15s ease, background .15s ease, color .15s ease}
-.kk-pill:hover{border-color:${GOLD}}
+.kk-input:focus{border-color:${GOLD}!important;box-shadow:0 0 0 3px rgba(195,154,69,0.13)}
 @keyframes kkFadeUp{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:translateY(0)}}
 @media (prefers-reduced-motion: reduce){
   .kk-fade-up{animation:none!important}

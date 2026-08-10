@@ -11,11 +11,11 @@
 import PortfolioClient from './PortfolioClient';
 
 export const metadata = {
-  title: 'Event Log — Stephen Simmons | Konquered Kocktails',
+  title: 'Event Library — Stephen Simmons | Konquered Kocktails',
   description:
-    'The complete record of Konquered Kocktails events. Stephen Simmons composes a drink experience from the elements already in the room — this is every one of them, logged.',
+    'The searchable record of every Konquered Kocktails event. Stephen Simmons composes a drink experience from the elements already in the room — this is every one of them, logged.',
   openGraph: {
-    title: 'Event Log — Stephen Simmons | Konquered Kocktails',
+    title: 'Event Library — Stephen Simmons | Konquered Kocktails',
     description:
       'Not a bar for hire. A curated drink experience composed from the elements in the room — and the complete record of every event.',
     url: 'https://konqueredkocktails.com/portfolio',

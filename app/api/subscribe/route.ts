@@ -27,6 +27,35 @@ import { callPortal } from '@/lib/portal';
 
 export const dynamic = 'force-dynamic';
 
+/* No consent_version column on purpose. A version stamp only tells you WHICH
+   wording someone agreed to; sms_consents.consent_text stores the wording
+   itself, verbatim, on every row. That is strictly stronger evidence and
+   can't drift out of sync with a lookup table. */
+
+/** Crude per-IP throttle. In-memory, so it resets on cold start and is
+ *  per-instance — enough to blunt a script, not a substitute for edge rate
+ *  limiting. Deliberately not pretending to be more than that. */
+const HITS = new Map<string, { n: number; until: number }>();
+const WINDOW_MS = 60_000;
+const MAX_PER_WINDOW = 5;
+
+function rateLimited(ip: string): boolean {
+  const now = Date.now();
+  const rec = HITS.get(ip);
+  if (!rec || now > rec.until) {
+    HITS.set(ip, { n: 1, until: now + WINDOW_MS });
+    if (HITS.size > 5000) HITS.clear(); // bound the map
+    return false;
+  }
+  rec.n += 1;
+  return rec.n > MAX_PER_WINDOW;
+}
+
+function clientIp(req: Request): string {
+  const fwd = req.headers.get('x-forwarded-for') || '';
+  return fwd.split(',')[0].trim() || req.headers.get('x-real-ip') || '';
+}
+
 function field(value: unknown, max: number): string {
   return String(value ?? '').trim().slice(0, max);
 }
@@ -44,6 +73,11 @@ function toE164(raw: string): string | null {
 }
 
 export async function POST(req: Request) {
+  const ip = clientIp(req);
+  if (ip && rateLimited(ip)) {
+    return Response.json({ error: 'Too many attempts. Please wait a moment.' }, { status: 429 });
+  }
+
   let body: Record<string, unknown>;
   try {
     body = await req.json();
@@ -87,6 +121,9 @@ export async function POST(req: Request) {
         source: field(body.source, 60) || 'experiences',
         source_url: field(body.source_url, 300) || null,
         user_agent: (req.headers.get('user-agent') || '').slice(0, 400),
+        // Evidence trail for A2P 10DLC / TCPA review: who, when, from where,
+        // and against which version of the disclosure.
+        ip: ip || null,
       },
     });
     if (!consent.ok) {
