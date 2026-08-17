@@ -43,7 +43,7 @@ const NAV_LINKS: [string, string][] = [
   ['Event Log', '/portfolio'],
   ['Reviews', '/reviews'],
   ['Shop', '/merch'],
-  ['Personal Training', KONQUERED_BALANCE],
+  ['Konquered Balance', KONQUERED_BALANCE],
 ];
 
 const isExternal = (target: string) => target.startsWith('http');
