@@ -120,7 +120,7 @@ export default function ExperiencesClient() {
             </span>
           </Link>
           <nav style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 22 }}>
-            <Link href="/portfolio" className="kk-navlink" style={navLink}>Event Log</Link>
+            <Link href="/portfolio" className="kk-navlink" style={navLink}>Art Gallery</Link>
             <Link href="/book" className="kk-gold-btn" style={{ ...goldButton, padding: '10px 22px', fontSize: 12 }}>
               Reserve a Date
             </Link>

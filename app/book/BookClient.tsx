@@ -334,7 +334,7 @@ export default function BookClient() {
           </Link>
           <nav style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 22 }}>
             <Link href="/" className="kk-navlink" style={navLink}>Home</Link>
-            <Link href="/portfolio" className="kk-navlink" style={navLink}>Event Log</Link>
+            <Link href="/portfolio" className="kk-navlink" style={navLink}>Art Gallery</Link>
           </nav>
         </div>
       </header>

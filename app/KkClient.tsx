@@ -40,7 +40,7 @@ const NAV_LINKS: [string, string][] = [
   ['Experiences', '/experiences'],
   ['This Week', 'menu'],
   ['About', 'about'],
-  ['Event Log', '/portfolio'],
+  ['Art Gallery', '/portfolio'],
   ['Reviews', '/reviews'],
   ['Shop', '/merch'],
   ['Konquered Balance', KONQUERED_BALANCE],
