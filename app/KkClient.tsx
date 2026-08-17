@@ -26,9 +26,16 @@ const HERO_VIDEO_ID = 'FSsAfj00KwDZSPPaApJjMHqx5msnrneNULZFEdDov01g8';   // sile
 const ABOUT_VIDEO_ID = 'MOxiZEb302JK1hwfkQzUQU3EDriQ401stR1CoSrTx02lq00'; // Gentleman Jack feature
 const MENU_VIDEO_ID = 'aJAE59oLfQgbyWqAY1cs9avjbrCg6FsIJunL8cNr5nw';      // "From the studio" feature
 
+/* Stephen's other business — personal training at Konquered Balance. Same
+   person, same parent LLC, different practice, so it opens in a new tab
+   rather than navigating away from a booking in progress. */
+const KONQUERED_BALANCE = 'https://konqueredbalance.com';
+
 /* Header / mobile-menu links — shared by desktop nav and the mobile drawer.
-   A target starting with '/' is a real route (rendered as a plain link);
-   anything else is an on-page section id that smooth-scrolls. */
+   Three kinds of target:
+     'https://…'  external site — new tab
+     '/…'        a real route on this site
+     anything else  an on-page section id that smooth-scrolls */
 const NAV_LINKS: [string, string][] = [
   ['Experiences', '/experiences'],
   ['This Week', 'menu'],
@@ -36,9 +43,11 @@ const NAV_LINKS: [string, string][] = [
   ['Event Log', '/portfolio'],
   ['Reviews', '/reviews'],
   ['Shop', '/merch'],
+  ['Personal Training', KONQUERED_BALANCE],
 ];
 
-const isRoute = (target: string) => target.startsWith('/');
+const isExternal = (target: string) => target.startsWith('http');
+const isRoute = (target: string) => target.startsWith('/') || isExternal(target);
 
 /* ── Real Konquered Kocktails content (verbatim from the live page) ── */
 
@@ -80,6 +89,7 @@ export default function KkClient() {
               <a key={target}
                  href={isRoute(target) ? target : `#${target}`}
                  onClick={isRoute(target) ? undefined : (e) => smoothScrollTo(e, target)}
+                 {...(isExternal(target) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                  className="kk-navlink"
                  style={{ color: MUTED, textDecoration: 'none', whiteSpace: 'nowrap' }}>
                 {label}
@@ -112,6 +122,7 @@ export default function KkClient() {
             {NAV_LINKS.map(([label, target]) => (
               <a key={target}
                  href={isRoute(target) ? target : `#${target}`}
+                 {...(isExternal(target) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                  className="kk-mobile-link"
                  onClick={(e) => {
                    if (!isRoute(target)) smoothScrollTo(e, target);
@@ -425,6 +436,20 @@ export default function KkClient() {
           <div style={{ fontFamily: FB, fontSize: 12.5, color: MUTED, letterSpacing: '0.3px', lineHeight: 1.9 }}>
             <div>{CONTACT.phone} · {CONTACT.email}</div>
             <div>{CONTACT.address}</div>
+          </div>
+          {/* Sibling brand. Given its own line with context rather than
+              dropped in with the legal links — it's a different service, and
+              a bare domain in a footer row reads as boilerplate. */}
+          <div style={{ fontFamily: FB, fontSize: 12.5, color: MUTED, lineHeight: 1.7, maxWidth: 320 }}>
+            Stephen also trains.{' '}
+            <a href={KONQUERED_BALANCE} target="_blank" rel="noopener noreferrer"
+               className="kk-contact"
+               style={{ color: GOLD, textDecoration: 'none', fontWeight: 500 }}>
+              Konquered Balance →
+            </a>
+            <span style={{ display: 'block', fontSize: 11.5, color: DIM, marginTop: 2 }}>
+              Personal training at konqueredbalance.com
+            </span>
           </div>
           <nav aria-label="Legal" style={{
             display: 'flex', flexWrap: 'wrap', gap: 14,
