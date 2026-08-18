@@ -14,8 +14,21 @@
 //   2. Give <body> the Warm Black base (#151310, CLAUDE.md palette) with no
 //      default margin, so the page sits flush and overscroll never flashes
 //      white.
+//
+//   3. Load Google Analytics for every route.
+//
+// GA goes through next/script rather than raw <script> tags. In the App
+// Router a bare <script> in <head> is not guaranteed to execute the way it
+// does in plain HTML, and next/script also keeps the tag out of the critical
+// path — afterInteractive fires once the page is usable, so analytics never
+// delays first paint. Putting it in the root layout means it covers every
+// page including the compliance set, with no per-page wiring.
 
 import type { Metadata, Viewport } from 'next';
+import Script from 'next/script';
+
+/** GA4 measurement ID. */
+const GA_ID = 'G-NTL8CFVYY6';
 
 export const metadata: Metadata = {
   title: {
@@ -54,7 +67,21 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body style={{ margin: 0, padding: 0, background: '#151310' }}>{children}</body>
+      <body style={{ margin: 0, padding: 0, background: '#151310' }}>
+        {children}
+
+        {/* Google Analytics (gtag.js) */}
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="ga-init" strategy="afterInteractive">
+          {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${GA_ID}');`}
+        </Script>
+      </body>
     </html>
   );
 }

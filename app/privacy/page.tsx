@@ -40,9 +40,19 @@ export default function PrivacyPage() {
         <><strong style={{ color: '#EFE7D5' }}>Guest reviews</strong> — your rating and review text, plus optionally your name, email address, event type, and up to three photos. Name, email and photos are all optional and labelled as such.</>,
         <><strong style={{ color: '#EFE7D5' }}>Purchases</strong> — when you buy merchandise or pay a booking deposit, checkout is hosted by Stripe. Your card details are entered on Stripe&rsquo;s page and never touch this website.</>,
       ]} />
+      <UL items={[
+        <><strong style={{ color: '#EFE7D5' }}>Usage analytics</strong> — we use Google Analytics to understand which pages are visited and how people move through the site. It sets cookies and collects a truncated IP address, device and browser type, approximate location, and the pages you view.</>,
+      ]} />
       <P>
-        We do not use advertising trackers, and we do not build profiles of visitors
-        for marketing purposes.
+        We do not use advertising trackers, we do not run ads, and we do not build
+        profiles of visitors for marketing purposes. Analytics tells us that a page was
+        viewed — it is not linked to your enquiry, booking, or review.
+      </P>
+      <P>
+        Most browsers let you block analytics cookies, and Google publishes a{' '}
+        <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer" style={{ color: '#C39A45' }}>
+          browser opt-out add-on
+        </a>. Blocking it does not affect anything on this site.
       </P>
 
       <H2>Why we collect it</H2>
@@ -86,6 +96,7 @@ export default function PrivacyPage() {
         <><strong style={{ color: '#EFE7D5' }}>Stripe</strong> — payment processing for deposits and merchandise. Stripe handles card data directly under its own privacy policy.</>,
         <><strong style={{ color: '#EFE7D5' }}>Mux</strong> — video hosting and playback for the event library.</>,
         <><strong style={{ color: '#EFE7D5' }}>Vercel</strong> — website hosting and delivery.</>,
+        <><strong style={{ color: '#EFE7D5' }}>Google Analytics</strong> — anonymous usage statistics, so we know which pages are worth keeping.</>,
         <><strong style={{ color: '#EFE7D5' }}>GoElev8</strong> — the booking and operations portal that holds enquiries, bookings, and orders on our behalf.</>,
       ]} />
       <P>
