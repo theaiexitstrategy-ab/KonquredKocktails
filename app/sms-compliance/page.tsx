@@ -11,6 +11,7 @@
 // worse than no document.
 
 import LegalPage, { H2, P, UL, Sample, LEGAL } from '../components/LegalPage';
+import { SMS_CONSENT_TEXT } from '@/lib/sms';
 
 export const metadata = {
   title: 'SMS Program & Compliance — Konquered Kocktails',
@@ -69,15 +70,7 @@ export default function SmsCompliancePage() {
       <P>
         This is the wording shown immediately beside the checkbox, verbatim:
       </P>
-      <Sample
-        label="Consent disclosure shown at opt-in"
-        body={
-          'I agree to receive text messages from Konquered Kocktails about experiences, ' +
-          'availability, and offers at the number provided. Consent is not a condition of ' +
-          'any purchase. Message frequency varies. Message and data rates may apply. ' +
-          'Reply STOP to opt out, HELP for help.'
-        }
-      />
+      <Sample label="Consent disclosure shown at opt-in" body={SMS_CONSENT_TEXT} />
       <P>
         The disclosure sits directly adjacent to the checkbox and the phone field, in
         the same visual block — not behind a link, a tooltip, or a modal. Links to this
@@ -133,7 +126,7 @@ export default function SmsCompliancePage() {
       />
       <Sample
         label="Welcome message, sent once on opt-in"
-        body={'Konquered Kocktails: You\'re subscribed. Msg frequency varies. Msg & data rates may apply. Reply HELP for help, STOP to opt out.'}
+        body={'Konquered Kocktails: You\'re subscribed. Up to 2-3 msgs/week. Msg & data rates may apply. Reply HELP for help, STOP to opt out.'}
       />
 
       <H2>6. Opting out, getting help, re-subscribing</H2>
@@ -154,10 +147,10 @@ export default function SmsCompliancePage() {
 
       <H2>7. Frequency and cost</H2>
       <P>
-        Message frequency varies and depends on the recipient&rsquo;s own activity —
-        most people receive only messages tied to an enquiry or a booking they made.
-        Recipients who additionally opt into the weekly drink board receive at most one
-        promotional message per week. Message and data rates may apply; these are set
+        Subscribers receive up to 2–3 messages per week: the weekly drink board, plus
+        messages tied to their own enquiry or booking. Volume depends on the
+        recipient&rsquo;s own activity and most weeks fall below that ceiling — it is
+        disclosed as a maximum so nobody receives more than they were told to expect. Message and data rates may apply; these are set
         by the recipient&rsquo;s mobile carrier, not by us, and we do not charge for
         messages.
       </P>

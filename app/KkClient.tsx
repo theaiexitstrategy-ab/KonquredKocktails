@@ -415,6 +415,78 @@ export default function KkClient() {
         borderTop: `1px solid ${LINE2}`, borderBottom: `1px solid ${LINE2}`,
         marginTop: 'clamp(24px, 4vw, 44px)',
       }}>
+      {/* ── Who we are + the SMS program ──────────────────────────────
+          Plain-language description of the business and the messaging program,
+          for carrier / A2P 10DLC reviewers who land on the homepage. Must stay
+          consistent with /sms-compliance and /sms-consent — three public pages
+          disagreeing about the program is what gets a campaign rejected. */}
+      <section id="sms" style={{ ...shell, ...sectionPad, scrollMarginTop: 84 }}>
+        <div style={{
+          display: 'grid', gap: 'clamp(20px, 3vw, 32px)',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        }}>
+          <div style={{ ...card, padding: 'clamp(22px, 3vw, 32px)' }}>
+            <h2 style={{ margin: 0, fontFamily: FD, fontWeight: 700, fontSize: 'clamp(24px, 3.2vw, 31px)', lineHeight: 1.18, color: TEXT }}>
+              About Konquered Kocktails
+            </h2>
+            <p style={{ margin: '14px 0 0', fontFamily: FB, fontWeight: 300, fontSize: 15, color: MUTED, lineHeight: 1.75 }}>
+              Konquered Kocktails is the craft-kocktail experience practice of Stephen
+              Simmons, serving {CONTACT.area}. We design and deliver on-site kocktail
+              experiences, guided spirit and wine tastings, hands-on sessions where guests
+              build their own expressions, and kustom recipe development — and we publish
+              a weekly board of the drinks coming out of the studio, with the full build
+              for each one.
+            </p>
+            <p style={{ margin: '12px 0 0', fontFamily: FB, fontWeight: 300, fontSize: 15, color: MUTED, lineHeight: 1.75 }}>
+              Operated by Konquered Balance LLC, {CONTACT.address}. Licensed and insured.
+            </p>
+          </div>
+
+          <div style={{
+            background: `linear-gradient(180deg, ${EMERALD} 0%, ${EMERALD_D} 100%)`,
+            border: `1px solid ${LINE2}`, borderRadius: 16,
+            padding: 'clamp(22px, 3vw, 32px)',
+          }}>
+            <h2 style={{ margin: 0, fontFamily: FD, fontWeight: 700, fontSize: 'clamp(24px, 3.2vw, 31px)', lineHeight: 1.18, color: TEXT }}>
+              Kocktails by text
+            </h2>
+            <p style={{ margin: '14px 0 0', fontFamily: FB, fontWeight: 300, fontSize: 15, color: CREAM, opacity: 0.88, lineHeight: 1.75 }}>
+              Opt in to Konquered Kocktails SMS and get the weekly drink board — recipes,
+              builds, and technique notes from the studio — plus messages about your own
+              enquiry or booking. <strong style={{ color: TEXT, fontWeight: 500 }}>Up to
+              2–3 messages per week.</strong> Consent is not a condition of any purchase.
+              Standard message and data rates may apply. Reply STOP to opt out, HELP for help.
+            </p>
+            <a href="/sms-consent" className="kk-gold-btn"
+               style={{ ...goldButton, ...fullButton, marginTop: 22, fontSize: 13 }}>
+              Get Weekly Kocktail Recipes by Text
+            </a>
+            <p style={{ margin: '14px 0 0', fontFamily: FB, fontSize: 11.5, color: CREAM, opacity: 0.62, lineHeight: 1.7 }}>
+              <a href="/sms-compliance" style={{ color: GOLD, textDecoration: 'none' }}>SMS Program</a>
+              {' · '}
+              <a href="/privacy" style={{ color: GOLD, textDecoration: 'none' }}>Privacy Policy</a>
+              {' · '}
+              <a href="/terms" style={{ color: GOLD, textDecoration: 'none' }}>Terms &amp; Conditions</a>
+            </p>
+          </div>
+        </div>
+
+        <p style={{
+          margin: 'clamp(18px, 2.6vw, 26px) 0 0', fontFamily: FB, fontWeight: 300,
+          fontSize: 12.5, color: DIM, lineHeight: 1.8, maxWidth: 900,
+        }}>
+          Konquered Kocktails is committed to SMS compliance with TCPA regulations, carrier
+          guidelines, and A2P 10DLC standards. Every subscriber provides affirmative,
+          opt-in consent through our documented process, and we never sell or share mobile
+          numbers or SMS consent with third parties. See our{' '}
+          <a href="/sms-compliance" style={{ color: MUTED }}>SMS Program documentation</a>,{' '}
+          <a href="/privacy" style={{ color: MUTED }}>Privacy Policy</a>, and{' '}
+          <a href="/terms" style={{ color: MUTED }}>Terms &amp; Conditions</a>.
+        </p>
+      </section>
+
+      <GoldDivider />
+
       {/* TODO(Aaron): confirm deposit model — copy says 50%, current flow charges $200 flat.
           The Experience Collection copy promises "a signed agreement and 50%
           non-refundable deposit begin the design process", but /book takes a
@@ -449,6 +521,14 @@ export default function KkClient() {
             </a>
             <span style={{ display: 'block', fontSize: 11.5, color: DIM, marginTop: 2 }}>
               Personal training at konqueredbalance.com
+            </span>
+          </div>
+          <div style={{ fontFamily: FB, fontSize: 12.5, color: MUTED, lineHeight: 1.8, maxWidth: 340 }}>
+            &copy; 2026 Konquered Kocktails
+            <span style={{ display: 'block', fontSize: 11.5, color: DIM, marginTop: 4 }}>
+              Message and data rates may apply. See our{' '}
+              <a href="/privacy" className="kk-contact" style={{ color: GOLD, textDecoration: 'none' }}>Privacy Policy</a>{' '}
+              for details.
             </span>
           </div>
           <nav aria-label="Legal" style={{

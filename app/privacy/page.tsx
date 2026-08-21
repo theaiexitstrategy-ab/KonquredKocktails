@@ -74,6 +74,19 @@ export default function PrivacyPage() {
         buying anything, and the opt-in box is never pre-ticked.
       </P>
       <P>
+        <strong style={{ color: '#EFE7D5' }}>Mobile Information Sharing Disclosure:</strong>{' '}
+        Konquered Kocktails does NOT share your mobile phone number, SMS consent
+        information, or messaging data with third parties or affiliates for marketing or
+        promotional purposes. Your phone number and SMS data are used exclusively by
+        Konquered Kocktails for delivering your opted-in SMS messaging program.
+      </P>
+      <P>
+        Subscribers receive up to 2–3 messages per week. Standard message and data rates
+        charged by your wireless carrier will apply. Our{' '}
+        <a href="/terms" style={{ color: '#C39A45' }}>Terms &amp; Conditions</a> govern the
+        program.
+      </P>
+      <P>
         You can withdraw consent at any time by replying STOP to any message, by
         calling {LEGAL.phone}, or by emailing {LEGAL.email}. Withdrawal is recorded as
         a new entry rather than by editing the original, so the history stays intact.

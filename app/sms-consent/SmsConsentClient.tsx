@@ -29,14 +29,10 @@ import {
   CREAM, TEXT, MUTED, DIM, LINE, LINE2, FD, FB,
 } from '../theme';
 import { LEGAL } from '../components/LegalPage';
-
-/** Must stay identical to the string in ExperiencesClient.tsx — both are
- *  stored verbatim on the consent record, and the compliance page quotes it. */
-export const SMS_CONSENT_TEXT =
-  'I agree to receive text messages from Konquered Kocktails about experiences, ' +
-  'availability, and offers at the number provided. Consent is not a condition of ' +
-  'any purchase. Message frequency varies. Message and data rates may apply. ' +
-  'Reply STOP to opt out, HELP for help.';
+import {
+  SMS_CONSENT_TEXT, SMS_FREQUENCY, SMS_PROGRAM_DESCRIPTION,
+  SMS_RATES_DISCLOSURE, SMS_NO_SHARING,
+} from '@/lib/sms';
 
 type Errors = Partial<Record<'name' | 'email' | 'phone' | 'consent', string>>;
 
@@ -131,7 +127,31 @@ export default function SmsConsentClient() {
           onChange={(e) => setPhone(e.target.value)} />
       </Field>
 
-      <label style={{ display: 'flex', gap: 11, alignItems: 'flex-start', marginTop: 22, cursor: 'pointer' }}>
+      {/* Affirmative-consent statement, stated before the checkbox rather
+          than only inside its label, so a reviewer sees it without having to
+          read the control. */}
+      <div style={{
+        marginTop: 24, padding: '16px 18px', borderRadius: 12,
+        background: 'rgba(10,10,10,0.32)', border: `1px solid ${LINE2}`,
+      }}>
+        <p style={{ margin: 0, fontFamily: FB, fontSize: 13, color: CREAM, opacity: 0.9, lineHeight: 1.7 }}>
+          By providing your phone number and checking the box below, you are giving
+          Konquered Kocktails your affirmative consent to send you SMS messages.
+          Message frequency: {SMS_FREQUENCY}. {SMS_RATES_DISCLOSURE}
+        </p>
+        <p style={{ margin: '10px 0 0', fontFamily: FB, fontSize: 12.5, color: CREAM, opacity: 0.72, lineHeight: 1.7 }}>
+          <strong style={{ color: TEXT, fontWeight: 500 }}>What you&rsquo;ll receive:</strong>{' '}
+          {SMS_PROGRAM_DESCRIPTION}
+        </p>
+        <p style={{ margin: '10px 0 0', fontFamily: FB, fontSize: 12.5, color: CREAM, opacity: 0.72, lineHeight: 1.7 }}>
+          I agree to Konquered Kocktails&rsquo;{' '}
+          <Link href="/privacy" style={{ color: GOLD, fontWeight: 500 }}>Privacy Policy</Link>
+          {' and '}
+          <Link href="/terms" style={{ color: GOLD, fontWeight: 500 }}>Terms &amp; Conditions</Link>.
+        </p>
+      </div>
+
+      <label style={{ display: 'flex', gap: 11, alignItems: 'flex-start', marginTop: 18, cursor: 'pointer' }}>
         <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)}
           style={{ marginTop: 3, width: 18, height: 18, accentColor: GOLD, flexShrink: 0 }} />
         <span style={{ fontSize: 12.5, color: CREAM, opacity: 0.82, lineHeight: 1.65 }}>
@@ -143,10 +163,8 @@ export default function SmsConsentClient() {
       )}
 
       <p style={{ margin: '14px 0 0 29px', fontSize: 12, color: CREAM, opacity: 0.6, lineHeight: 1.6 }}>
-        See our <Link href="/privacy" style={{ color: GOLD }}>Privacy Policy</Link>,{' '}
-        <Link href="/terms" style={{ color: GOLD }}>Terms &amp; Conditions</Link>, and{' '}
-        <Link href="/sms-compliance" style={{ color: GOLD }}>SMS Program details</Link>.
-        We never sell or share your mobile number.
+        Full detail on our{' '}
+        <Link href="/sms-compliance" style={{ color: GOLD }}>SMS Program page</Link>.
       </p>
 
       {error && <p role="alert" style={errorText}>{error}</p>}
@@ -155,6 +173,12 @@ export default function SmsConsentClient() {
         style={{ ...goldButton, display: 'block', width: '100%', marginTop: 24, opacity: busy ? 0.7 : 1 }}>
         {busy ? 'Recording…' : 'Opt In to Text Messages'}
       </button>
+
+      {/* Form footer — restates the commitment after the button, where a
+          reviewer checking the submit path will see it. */}
+      <p style={{ margin: '16px 0 0', fontFamily: FB, fontSize: 11.5, color: CREAM, opacity: 0.58, lineHeight: 1.7, textAlign: 'center' }}>
+        {SMS_NO_SHARING}
+      </p>
     </form>
   );
 }

@@ -30,13 +30,7 @@ import {
   ExperienceCollection, ExperienceJourney, JourneyIntro, BeginTheConversation,
 } from '../components/ExperienceCollection';
 
-/** Stored verbatim with the consent record. Changing this wording changes
- *  what future visitors agree to; it never alters an existing record. */
-const SMS_CONSENT_TEXT =
-  'I agree to receive text messages from Konquered Kocktails about experiences, ' +
-  'availability, and offers at the number provided. Consent is not a condition of ' +
-  'any purchase. Message frequency varies. Message and data rates may apply. ' +
-  'Reply STOP to opt out, HELP for help.';
+import { SMS_CONSENT_TEXT } from '@/lib/sms';
 
 type Errors = Partial<Record<'name' | 'email' | 'phone', string>>;
 
