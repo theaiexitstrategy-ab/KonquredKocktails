@@ -17,10 +17,17 @@ import {
   INK, PANEL, GOLD, GOLD_HI, GOLD_D, CREAM, TEXT, MUTED, DIM, LINE, LINE2, FD, FB, CONTACT,
 } from '../theme';
 
-/** Single source for the entity details that appear across all four pages. */
+/* Canonical entity strings. Every page that names the business imports
+   from here rather than typing it out, so "Konquered Balance LLC",
+   "Konquered Kocktails", and the combined form can't drift into three
+   slightly different spellings across a site that regulators read. */
 export const LEGAL = {
   entity: 'Konquered Balance LLC',
   dba: 'Konquered Kocktails',
+  /** Long form, for the top of a legal document. */
+  fullName: 'Konquered Balance LLC, doing business as Konquered Kocktails',
+  /** Compact form, for inline references in body copy. */
+  combined: 'Konquered Balance LLC (DBA: Konquered Kocktails)',
   address: '920 Hemsath, Suite 100, St. Charles, MO 63303',
   city: 'St. Charles',
   state: 'Missouri',
@@ -73,7 +80,7 @@ export default function LegalPage({
           {title}
         </h1>
         <p style={{ margin: '14px 0 0', fontFamily: FB, fontSize: 12, letterSpacing: '1.2px', textTransform: 'uppercase', color: DIM, fontWeight: 500 }}>
-          {LEGAL.entity} d/b/a {LEGAL.dba} · Last updated {LAST_UPDATED}
+          {LEGAL.fullName} · Last updated {LAST_UPDATED}
         </p>
 
         {draft && (
@@ -113,7 +120,7 @@ export default function LegalPage({
 
       <footer style={{ borderTop: `1px solid ${LINE}`, padding: 'clamp(28px, 4vw, 44px) 20px' }}>
         <div style={{ maxWidth: 760, margin: '0 auto', fontFamily: FB, fontSize: 12.5, color: MUTED, lineHeight: 1.9 }}>
-          <strong style={{ color: TEXT, fontWeight: 500 }}>{LEGAL.entity}</strong> d/b/a {LEGAL.dba}
+          <strong style={{ color: TEXT, fontWeight: 500 }}>{LEGAL.entity}</strong>, doing business as {LEGAL.dba}
           <br />
           {LEGAL.address}
           <br />

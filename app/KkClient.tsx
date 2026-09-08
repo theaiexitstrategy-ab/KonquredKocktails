@@ -475,10 +475,11 @@ export default function KkClient() {
           margin: 'clamp(18px, 2.6vw, 26px) 0 0', fontFamily: FB, fontWeight: 300,
           fontSize: 12.5, color: DIM, lineHeight: 1.8, maxWidth: 900,
         }}>
-          Konquered Kocktails is committed to SMS compliance with TCPA regulations, carrier
-          guidelines, and A2P 10DLC standards. Every subscriber provides affirmative,
-          opt-in consent through our documented process, and we never sell or share mobile
-          numbers or SMS consent with third parties. See our{' '}
+          Konquered Balance LLC (DBA: Konquered Kocktails) is committed to SMS compliance
+          with TCPA regulations, CTIA SHAFT guidelines, and A2P 10DLC standards. Every
+          subscriber provides affirmative, opt-in consent through our documented process,
+          and we never sell or share mobile numbers or SMS consent with third parties.
+          See our{' '}
           <a href="/sms-compliance" style={{ color: MUTED }}>SMS Program documentation</a>,{' '}
           <a href="/privacy" style={{ color: MUTED }}>Privacy Policy</a>, and{' '}
           <a href="/terms" style={{ color: MUTED }}>Terms &amp; Conditions</a>.
@@ -524,7 +525,8 @@ export default function KkClient() {
             </span>
           </div>
           <div style={{ fontFamily: FB, fontSize: 12.5, color: MUTED, lineHeight: 1.8, maxWidth: 340 }}>
-            &copy; 2026 Konquered Kocktails
+            &copy; 2026 Konquered Balance LLC, doing business as Konquered Kocktails.
+            All rights reserved.
             <span style={{ display: 'block', fontSize: 11.5, color: DIM, marginTop: 4 }}>
               Message and data rates may apply. See our{' '}
               <a href="/privacy" className="kk-contact" style={{ color: GOLD, textDecoration: 'none' }}>Privacy Policy</a>{' '}
