@@ -26,6 +26,7 @@
 
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
+import AgeGate from './components/AgeGate';
 
 /** GA4 measurement ID. */
 const GA_ID = 'G-NTL8CFVYY6';
@@ -68,7 +69,10 @@ export default function RootLayout({
         />
       </head>
       <body style={{ margin: 0, padding: 0, background: '#151310' }}>
-        {children}
+        {/* 21+ gate. Wraps every route; it exempts the compliance pages
+            itself (see UNGATED in AgeGate) so carrier reviewers reach the
+            privacy policy, terms, and SMS program docs without a barrier. */}
+        <AgeGate>{children}</AgeGate>
 
         {/* Google Analytics (gtag.js) */}
         <Script
