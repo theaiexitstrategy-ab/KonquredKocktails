@@ -101,7 +101,13 @@
         "server": {
           "url": "https://konqueredkocktails.com/api/ava/lead",
           "timeoutSeconds": 20
-        }
+        },
+        "messages": [
+          {
+            "type": "request-start",
+            "content": "One moment while I note that for Stephen."
+          }
+        ]
       }
     ]
   },
