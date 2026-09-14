@@ -9,7 +9,10 @@
 // convenience for Aaron and Stephen, not an auth system.
 //
 // Env (set in Vercel; "Sensitive" is fine — these are read at runtime):
-//   AVA_TEST_PASSCODE   shared passcode for the test page
+//   AVA_TEST_PASSCODE   6-digit code for the test page. Short on purpose, so
+//                       the attempt limit below is what protects it: 10
+//                       tries per IP per 10 minutes. Acceptable for an
+//                       internal test page; not a pattern for anything real.
 //   VAPI_PUBLIC_KEY     Vapi *public* key (NOT the private key)
 //   VAPI_ASSISTANT_ID   the Konquered Kocktails concierge assistant
 

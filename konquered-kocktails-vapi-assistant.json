@@ -14,8 +14,12 @@
     ]
   },
   "voice": {
-    "provider": "vapi",
-    "voiceId": "Savannah"
+    "provider": "11labs",
+    "voiceId": "sarah",
+    "model": "eleven_turbo_v2_5",
+    "stability": 0.45,
+    "similarityBoost": 0.8,
+    "useSpeakerBoost": true
   },
   "transcriber": {
     "provider": "deepgram",

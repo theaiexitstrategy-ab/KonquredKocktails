@@ -31,12 +31,32 @@ type Line = { role: 'assistant' | 'user'; text: string; flags: string[] };
 type Phase = 'locked' | 'ready' | 'connecting' | 'live' | 'ended';
 
 type VapiLike = {
-  start: (assistantId: string) => Promise<unknown>;
+  start: (assistantId: string, overrides?: Record<string, unknown>) => Promise<unknown>;
   stop: () => Promise<void>;
   setMuted: (m: boolean) => void;
   on: (event: string, cb: (...args: never[]) => void) => void;
   removeAllListeners?: () => void;
 };
+
+/* Voices to compare by ear. Applied as a per-call override, so trying one
+   never changes the saved assistant — tell Aaron which one wins and it gets
+   made permanent with a sync. Names are Vapi's built-in ElevenLabs aliases,
+   which Vapi guarantees exist, rather than raw 11labs voice ids.
+
+   eleven_turbo_v2_5 is the realism/latency balance for live calls: clearly
+   more natural than the Flash models, still fast enough not to lag. A little
+   lower stability lets the delivery vary instead of sounding read-out. */
+const ELEVEN = { provider: '11labs', model: 'eleven_turbo_v2_5', stability: 0.45, similarityBoost: 0.8, useSpeakerBoost: true };
+const VOICES: { id: string; label: string; note: string; voice: Record<string, unknown> | null }[] = [
+  { id: 'saved', label: 'Saved voice', note: 'Whatever Ava is set to right now (Sarah)', voice: null },
+  { id: 'sarah', label: 'Sarah', note: 'Soft, warm, composed', voice: { ...ELEVEN, voiceId: 'sarah' } },
+  { id: 'matilda', label: 'Matilda', note: 'Warm, friendly, grounded', voice: { ...ELEVEN, voiceId: 'matilda' } },
+  { id: 'andrea', label: 'Andrea', note: 'Polished, professional', voice: { ...ELEVEN, voiceId: 'andrea' } },
+  { id: 'marissa', label: 'Marissa', note: 'Bright, conversational', voice: { ...ELEVEN, voiceId: 'marissa' } },
+  { id: 'myra', label: 'Myra', note: 'Gentle, unhurried', voice: { ...ELEVEN, voiceId: 'myra' } },
+  { id: 'paula', label: 'Paula', note: 'Mature, reassuring', voice: { ...ELEVEN, voiceId: 'paula' } },
+  { id: 'savannah', label: 'Savannah (old)', note: 'The original Vapi voice, for comparison', voice: { provider: 'vapi', voiceId: 'Savannah' } },
+];
 
 const SCENARIOS = [
   { title: 'The ideal caller', body: '40th birthday, ~35 guests, St. Charles, six weeks out. Wants guests to feel celebrated. Should route to the Signature experience and offer the 15-minute Experience Discovery.' },
@@ -60,6 +80,8 @@ export default function AvaTestClient() {
   const [muted, setMuted] = useState(false);
   const [callError, setCallError] = useState('');
   const [seconds, setSeconds] = useState(0);
+  const [voiceId, setVoiceId] = useState('saved');
+  const chosenVoice = VOICES.find((v) => v.id === voiceId) ?? VOICES[0];
 
   const vapiRef = useRef<VapiLike | null>(null);
   const logRef = useRef<HTMLDivElement>(null);
@@ -138,7 +160,10 @@ export default function AvaTestClient() {
         setLines((prev) => [...prev, { role: m.role!, text, flags }]);
       }) as never);
 
-      await vapi.start(creds.assistantId);
+      await vapi.start(
+        creds.assistantId,
+        chosenVoice.voice ? { voice: chosenVoice.voice } : undefined,
+      );
     } catch (err) {
       setPhase('ready');
       setCallError(
@@ -147,7 +172,7 @@ export default function AvaTestClient() {
           : 'Could not start the call. Check the mic permission and try again.',
       );
     }
-  }, [creds]);
+  }, [creds, chosenVoice]);
 
   async function endCall() {
     await vapiRef.current?.stop().catch(() => {});
@@ -177,12 +202,14 @@ export default function AvaTestClient() {
         {phase === 'locked' ? (
           <form onSubmit={unlock} style={{ ...card, maxWidth: 420, marginTop: 28 }}>
             <label style={{ display: 'block' }}>
-              <span style={label}>Passcode</span>
-              <input type="password" value={passcode} autoFocus autoComplete="off"
-                onChange={(e) => setPasscode(e.target.value)} style={input} />
+              <span style={label}>6-digit code</span>
+              <input type="password" inputMode="numeric" pattern="[0-9]*" maxLength={6}
+                value={passcode} autoFocus autoComplete="one-time-code"
+                onChange={(e) => setPasscode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                style={{ ...input, letterSpacing: '0.5em', fontSize: 22, textAlign: 'center' }} />
             </label>
             {unlockError && <p role="alert" style={errorText}>{unlockError}</p>}
-            <button type="submit" disabled={busy || !passcode} style={{ ...goldBtn, width: '100%', marginTop: 16, opacity: busy || !passcode ? 0.6 : 1 }}>
+            <button type="submit" disabled={busy || passcode.length !== 6} style={{ ...goldBtn, width: '100%', marginTop: 16, opacity: busy || passcode.length !== 6 ? 0.6 : 1 }}>
               {busy ? 'Checking…' : 'Unlock'}
             </button>
           </form>
@@ -235,6 +262,22 @@ export default function AvaTestClient() {
               </div>
 
               {callError && <p role="alert" style={errorText}>{callError}</p>}
+
+              {(phase === 'ready' || phase === 'ended') && (
+                <label style={{ display: 'block', marginTop: 16 }}>
+                  <span style={label}>Voice for this call</span>
+                  <select value={voiceId} onChange={(e) => setVoiceId(e.target.value)} style={input}>
+                    {VOICES.map((v) => (
+                      <option key={v.id} value={v.id} style={{ background: PANEL2, color: TEXT }}>
+                        {v.label} — {v.note}
+                      </option>
+                    ))}
+                  </select>
+                  <span style={{ display: 'block', marginTop: 6, fontSize: 11.5, color: CREAM, opacity: 0.6, lineHeight: 1.5 }}>
+                    Trying a voice doesn&rsquo;t change Ava. Note the one you like best.
+                  </span>
+                </label>
+              )}
 
               <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
                 {phase === 'live' || phase === 'connecting' ? (
