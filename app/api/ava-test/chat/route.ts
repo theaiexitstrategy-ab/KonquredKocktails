@@ -23,6 +23,7 @@
 import { timingSafeEqual } from 'node:crypto';
 import { CHAT_GREETING } from '@/lib/ava';
 import assistantConfig from '@/konquered-kocktails-vapi-assistant.json';
+import { authedTools } from '@/lib/ava-tools';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,16 +52,19 @@ const CHANNEL_NOTE = [
 
 /** Ava's model block with the channel note placed first, so it is read before
  *  the voice-delivery rules it adjusts. Derived from the master prompt at
- *  runtime — never a hand-maintained copy. */
-const CHAT_MODEL = {
+ *  runtime — never a hand-maintained copy. The override replaces the saved
+ *  tools, so they are re-attached here with their auth header and tagged as
+ *  chat. */
+const chatModel = (tools: NonNullable<ReturnType<typeof authedTools>>) => ({
   ...assistantConfig.model,
+  tools,
   messages: [{
     role: 'system',
     content: `${CHANNEL_NOTE}
 
 ${assistantConfig.model.messages[0].content}`,
   }],
-};
+});
 
 function limited(ip: string): boolean {
   const now = Date.now();
@@ -84,7 +88,8 @@ export async function POST(req: Request) {
   const passcode = process.env.AVA_TEST_PASSCODE || '';
   const privateKey = process.env.VAPI_PRIVATE_KEY || '';
   const assistantId = process.env.VAPI_ASSISTANT_ID || '';
-  if (!passcode || !privateKey || !assistantId) {
+  const tools = authedTools('chat');
+  if (!passcode || !privateKey || !assistantId || !tools) {
     return Response.json({ error: 'Chat isn’t configured yet.' }, { status: 503 });
   }
 
@@ -107,7 +112,7 @@ export async function POST(req: Request) {
     ? body.previousChatId
     : '';
 
-  const assistantOverrides = { model: CHAT_MODEL };
+  const assistantOverrides = { model: chatModel(tools) };
   const payload = previousChatId
     ? { assistantId, assistantOverrides, previousChatId, input: message }
     : {

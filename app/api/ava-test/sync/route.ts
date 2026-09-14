@@ -16,6 +16,7 @@
 
 import { timingSafeEqual } from 'node:crypto';
 import config from '@/konquered-kocktails-vapi-assistant.json';
+import { authedTools } from '@/lib/ava-tools';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,6 +47,12 @@ export async function POST(req: Request) {
     );
   }
 
+  // Ava's capture_lead tool posts back to this site; without its secret
+  // header every save would be rejected, so refuse to sync at all.
+  const tools = authedTools('voice');
+  if (!tools) return Response.json({ error: 'AVA_TOOL_SECRET not set' }, { status: 503 });
+  const payload = { ...config, model: { ...config.model, tools } };
+
   const url = existingId
     ? `https://api.vapi.ai/assistant/${encodeURIComponent(existingId)}`
     : 'https://api.vapi.ai/assistant';
@@ -59,7 +66,7 @@ export async function POST(req: Request) {
       // signatures (error 1010). Send an explicit, honest user agent.
       'User-Agent': 'konqueredkocktails.com/ava-sync',
     },
-    body: JSON.stringify(config),
+    body: JSON.stringify(payload),
     cache: 'no-store',
   });
 
@@ -81,6 +88,7 @@ export async function POST(req: Request) {
     name: data.name,
     voice: data.voice,
     model: `${model.provider ?? ''} ${model.model ?? ''}`.trim(),
+    tools: ((data.model as { tools?: { function?: { name?: string } }[] })?.tools ?? []).map((t) => t.function?.name),
     dashboard: data.id ? `https://dashboard.vapi.ai/assistants/${data.id}` : null,
   });
 }
