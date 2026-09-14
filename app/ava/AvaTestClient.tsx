@@ -18,14 +18,8 @@ import {
   CREAM, TEXT, MUTED, DIM, LINE, LINE2, FD, FB,
 } from '../theme';
 
-/** Words Ava must never say. Matched on her lines only — a caller using
- *  them is fine. Mirrors the NON-NEGOTIABLE BRAND LANGUAGE block in her
- *  system prompt. */
-const FORBIDDEN = [
-  'bartending', 'bartender', 'book now', 'booking', 'drink menu',
-  'cocktail class', 'mixology education', 'mixology lesson', 'just drinks',
-  'available for hire',
-];
+import { forbiddenIn } from '@/lib/ava';
+import AvaChatPanel from './AvaChatPanel';
 
 type Line = { role: 'assistant' | 'user'; text: string; flags: string[] };
 type Phase = 'locked' | 'ready' | 'connecting' | 'live' | 'ended';
@@ -80,6 +74,7 @@ export default function AvaTestClient() {
   const [muted, setMuted] = useState(false);
   const [callError, setCallError] = useState('');
   const [seconds, setSeconds] = useState(0);
+  const [mode, setMode] = useState<'voice' | 'chat'>('voice');
   const [voiceId, setVoiceId] = useState('saved');
   const chosenVoice = VOICES.find((v) => v.id === voiceId) ?? VOICES[0];
 
@@ -154,8 +149,7 @@ export default function AvaTestClient() {
         if (m?.type !== 'transcript' || !m.role || !m.transcript) return;
         if (m.transcriptType === 'partial') { setPartial({ role: m.role, text: m.transcript }); return; }
         const text = m.transcript;
-        const lower = text.toLowerCase();
-        const flags = m.role === 'assistant' ? FORBIDDEN.filter((w) => lower.includes(w)) : [];
+        const flags = m.role === 'assistant' ? forbiddenIn(text) : [];
         setPartial(null);
         setLines((prev) => [...prev, { role: m.role!, text, flags }]);
       }) as never);
@@ -214,7 +208,30 @@ export default function AvaTestClient() {
             </button>
           </form>
         ) : (
-          <div style={{ display: 'grid', gap: 22, marginTop: 28, gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', alignItems: 'start' }}>
+          <>
+          {/* Voice / chat toggle. Locked during a live call so the mic isn't
+              left open behind the chat view. */}
+          <div role="tablist" aria-label="Test mode" style={{ display: 'inline-flex', gap: 4, marginTop: 28, padding: 4, borderRadius: 999, border: `1px solid ${LINE2}`, background: PANEL }}>
+            {(['voice', 'chat'] as const).map((m) => {
+              const on = mode === m;
+              const locked = phase === 'live' || phase === 'connecting';
+              return (
+                <button key={m} type="button" role="tab" aria-selected={on}
+                  disabled={locked && !on}
+                  onClick={() => setMode(m)}
+                  style={{
+                    border: 'none', borderRadius: 999, padding: '9px 20px', cursor: locked && !on ? 'not-allowed' : 'pointer',
+                    fontFamily: FB, fontSize: 12.5, letterSpacing: '1.2px', textTransform: 'uppercase', fontWeight: 600,
+                    background: on ? GOLD : 'transparent', color: on ? INK : CREAM, opacity: locked && !on ? 0.4 : 1,
+                  }}>
+                  {m === 'voice' ? 'Voice call' : 'Text chat'}
+                </button>
+              );
+            })}
+          </div>
+          <div style={{ display: 'grid', gap: 22, marginTop: 18, gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', alignItems: 'start' }}>
+            {mode === 'chat' ? <AvaChatPanel passcode={passcode} /> : (
+            <>
             {/* ── Call panel ─────────────────────────────────────── */}
             <section style={{ ...card, background: `linear-gradient(180deg, ${EMERALD} 0%, ${EMERALD_D} 100%)` }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -305,6 +322,8 @@ export default function AvaTestClient() {
                   : 'waiting for Ava to speak'}
               </p>
             </section>
+            </>
+            )}
 
             {/* ── What to try ───────────────────────────────────── */}
             <section style={card}>
@@ -328,6 +347,7 @@ export default function AvaTestClient() {
               </p>
             </section>
           </div>
+          </>
         )}
       </div>
     </main>
