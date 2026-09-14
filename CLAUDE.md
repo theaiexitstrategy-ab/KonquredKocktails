@@ -104,6 +104,12 @@ Every event Stephen has composed, newest first, filterable by type and year. Not
 - Because the portal rows have no metadata yet, portal values are **merged over** `SEED_EVENTS` by key: portal wins on any field it has, the seed fills only what the portal left null. Once Stephen backfills, the merge stops doing anything.
 - Any failure keeps the seed on screen. Seed entries assert only `event_type` — dates and venues stay null rather than invented, because a fabricated venue on a record of real work is worse than a blank field.
 
+## Ava — voice + chat concierge (Vapi)
+- Config: `konquered-kocktails-vapi-assistant.json` is the single source (prompt, voice, tools). Push it with `POST /api/ava-test/sync` (bearer `AVA_ADMIN_TOKEN`); it PATCHes `VAPI_ASSISTANT_ID`. Private test page: `/ava` (6-digit `AVA_TEST_PASSCODE`), voice + text chat.
+- Chat (`/api/ava-test/chat`) sends the master prompt with a text-channel note as `assistantOverrides.model` every turn. Vapi's Chat API drops system messages placed in `input`.
+- **Lead capture:** Ava's `capture_lead` tool → `POST /api/ava/lead` (header `x-ava-tool-secret` = `AVA_TOOL_SECRET`, injected at sync/chat time, never committed) → portal `experience-leads`, source `ava-voice` / `ava-chat`. The relationship label ("New inquiry" / "Returning inquiry" / "Past client") leads `goal`; the portal emails key off it.
+- **Re-engagement is email-only until a texting number exists** and lives in the portal (`lib/experience-reengage.js`, cron `/api/cron/experience-reengage` every 10 min). Inquiry series (Ava leads): Stephen alert + guest emails at 0h / 2d / 6d / 14d. Post-event (confirmed bookings, any source): +1d review request / +21d / +75d. Stops on deposit, cancel, `Do Not Contact` tag, or unsubscribe. Copy and cadence are edited in that one portal file. Pause with portal env `REENGAGE_PAUSED=1`.
+
 ## Env vars (see `.env.local.example`)
 | Var | Purpose | Without it |
 |---|---|---|
@@ -130,6 +136,7 @@ The 402 is intentional, not a bug: without the connected account, charging would
 - Never commit raw MP4 masters to the repo or serve them un-optimized from `public/`.
 
 ## Current work log
+- 2026-09-14: Ava (Vapi) concierge: voice + chat test page, `capture_lead` tool into the portal, and portal email re-engagement (goelev8.ai-portal PR #91).
 - 2026-08-01: Replaced the three-package Experiences block with the 7-offering **Experience Collection** (+ Journey band, + Begin the Conversation CTA), rendered from `data/experiences.ts`. Added ESLint (was never configured).
 - 2026-08-01: Added `/reviews`. Created `public.reviews` + the `event-photos` bucket. Granted `anon` EXECUTE on `public.locs_is_admin()` — four PUBLIC storage policies call it, and anon's lack of EXECUTE was erroring and blocking ALL anonymous uploads to every bucket.
 - 2026-07-29: Repositioned as artist-led. Added `/book` on real portal availability; deleted the homepage's fake calendar and retired `/api/checkout/kbsetup`. Rebuilt `/portfolio` as a filterable event log. Corrected the tenant slug to `konquered-balance`.
