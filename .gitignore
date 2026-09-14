@@ -13,3 +13,6 @@ next-env.d.ts
 .DS_Store
 
 .vercel
+
+# Vapi assistant id (local only)
+.vapi-assistant-id
