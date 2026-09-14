@@ -6,11 +6,15 @@
 // routing, brand-language rules and the Experience Discovery handoff are
 // defined once and shared by phone and chat. Nothing about Ava is copied here.
 //
-// What IS added is a short channel note on the first turn. Ava's master prompt
-// is written for speech — "say seven hundred fifty dollars, not $750", "don't
-// read punctuation" — which reads strangely in a chat window. The note flips
-// just those delivery rules for text and explicitly keeps everything else.
-// Later turns carry it forward through previousChatId.
+// What IS added is a short text-channel note. Ava's master prompt is written
+// for speech — "say seven hundred fifty dollars, not $750" — which reads
+// strangely in a chat window.
+//
+// The note is applied through assistantOverrides.model on EVERY turn, as the
+// top of a system prompt built at runtime from the same master prompt file.
+// Sending it as a system message inside `input` does not work: Vapi's Chat API
+// drops system messages there. Verified by asking Ava which channel she was on
+// — she answered "a phone call" despite the note.
 //
 // Server-side only: Vapi's Chat API requires the PRIVATE key, which must never
 // reach a browser. Locked to the test page's 6-digit code, with a per-IP
@@ -18,6 +22,7 @@
 
 import { timingSafeEqual } from 'node:crypto';
 import { CHAT_GREETING } from '@/lib/ava';
+import assistantConfig from '@/konquered-kocktails-vapi-assistant.json';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,6 +48,19 @@ const CHANNEL_NOTE = [
   'To move an aligned guest forward, ask for their name, email and phone here so Stephen can arrange',
   'the complimentary 15-minute Experience Discovery. Never take payment in chat.',
 ].join('\n');
+
+/** Ava's model block with the channel note placed first, so it is read before
+ *  the voice-delivery rules it adjusts. Derived from the master prompt at
+ *  runtime — never a hand-maintained copy. */
+const CHAT_MODEL = {
+  ...assistantConfig.model,
+  messages: [{
+    role: 'system',
+    content: `${CHANNEL_NOTE}
+
+${assistantConfig.model.messages[0].content}`,
+  }],
+};
 
 function limited(ip: string): boolean {
   const now = Date.now();
@@ -89,12 +107,13 @@ export async function POST(req: Request) {
     ? body.previousChatId
     : '';
 
+  const assistantOverrides = { model: CHAT_MODEL };
   const payload = previousChatId
-    ? { assistantId, previousChatId, input: message }
+    ? { assistantId, assistantOverrides, previousChatId, input: message }
     : {
         assistantId,
+        assistantOverrides,
         input: [
-          { role: 'system', content: CHANNEL_NOTE },
           { role: 'assistant', content: CHAT_GREETING },
           { role: 'user', content: message },
         ],
