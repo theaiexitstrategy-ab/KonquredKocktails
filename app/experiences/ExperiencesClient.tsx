@@ -96,7 +96,8 @@ export default function ExperiencesClient() {
 
   return (
     <main style={{ background: INK, color: TEXT, fontFamily: FB, fontWeight: 300, minHeight: '100vh', overflowX: 'hidden' }}>
-      <style>{KEYFRAMES}</style>
+      {/* Raw, not a text child — see KkClient.tsx. */}
+      <style dangerouslySetInnerHTML={{ __html: KEYFRAMES }} />
 
       {/* ── Header ─────────────────────────────────────────────── */}
       <header style={headerStyle}>

@@ -16,11 +16,11 @@
 // The class is set twice, on purpose:
 //   1. a pre-paint inline script in app/layout.tsx, so the band is in its
 //      final place on the very first frame; and
-//   2. an effect here, because this page currently fails hydration for
-//      unrelated reasons (React #418/#423/#425, present before this theme
-//      existed — Mux's custom element is the likely culprit). That failure
-//      makes React re-render the document client-side and drop a class set by
-//      a script, so the effect puts it back.
+//   2. an effect here as a backstop. A hydration failure anywhere on the page
+//      makes React re-render the document and drop a class set by a script —
+//      which is exactly what happened when this theme was written, before the
+//      escaped-<style> bug was fixed. Four lines to make the season immune to
+//      the next one.
 // Window and overrides live in ./autumn-season.
 //
 // TO RETIRE THE SEASON: delete this file and ./autumn-season, the mounts in
@@ -144,15 +144,16 @@ export function AutumnWash() {
    season this whole block costs one unmatched selector per rule. */
 
 export function AutumnStyles() {
-  // Re-apply the season flag after hydration — see the note at the top of the
-  // file. Idempotent: classList.add on a class already present is a no-op.
+  // Backstop for the pre-paint script — see the note at the top of the file.
+  // Idempotent: classList.add on a class already present is a no-op.
   useEffect(() => {
     if (isAutumnNow(new Date(), window.location.search)) {
       document.documentElement.classList.add(AUTUMN_CLASS);
     }
   }, []);
 
-  return <style>{AUTUMN_CSS}</style>;
+  // Raw, not a text child — see the note in KkClient.tsx.
+  return <style dangerouslySetInnerHTML={{ __html: AUTUMN_CSS }} />;
 }
 
 const AUTUMN_CSS = `

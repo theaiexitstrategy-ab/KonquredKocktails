@@ -170,7 +170,8 @@ export default function ReviewsClient() {
 
   return (
     <main style={{ background: INK, color: TEXT, fontFamily: FB, fontWeight: 300, minHeight: '100vh', overflowX: 'hidden' }}>
-      <style>{KEYFRAMES}</style>
+      {/* Raw, not a text child — see KkClient.tsx. */}
+      <style dangerouslySetInnerHTML={{ __html: KEYFRAMES }} />
 
       <header style={headerStyle}>
         <div style={{ maxWidth: 1180, margin: '0 auto', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>

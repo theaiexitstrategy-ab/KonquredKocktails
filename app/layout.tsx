@@ -59,7 +59,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    /* suppressHydrationWarning: the seasonal script above adds a class to
+       <html> before React hydrates, which React would otherwise report as an
+       extra attribute from the server. It applies to this element only. */
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

@@ -68,7 +68,12 @@ export default function KkClient() {
   return (
     <main style={{ background: INK, color: TEXT, fontFamily: FB, fontWeight: 300, minHeight: '100vh', overflowX: 'hidden' }}>
       {/* Animation + a couple of pseudo-element effects that inline styles can't express. */}
-      <style>{KEYFRAMES}</style>
+      {/* dangerouslySetInnerHTML, not a text child: React HTML-escapes text
+          children, and a <style> element is raw text to the parser, so the
+          server would ship font-family:&quot;Outfit&quot; and content:&#x27;&#x27;
+          as literal CSS — broken until hydration rewrote it, and a hydration
+          mismatch every time. */}
+      <style dangerouslySetInnerHTML={{ __html: KEYFRAMES }} />
       <AutumnStyles />
       <AutumnLeaves />
 
@@ -100,8 +105,11 @@ export default function KkClient() {
                 {label}
               </a>
             ))}
+            {/* nowrap here, not on goldButton: as a flex item this button gets
+                squeezed by the links beside it and broke to "RESERVE A / DATE".
+                The page's other gold buttons are free to wrap on narrow screens. */}
             <a href="/book"
-               className="kk-gold-btn" style={{ ...goldButton, padding: '10px 22px', fontSize: 12 }}>
+               className="kk-gold-btn" style={{ ...goldButton, padding: '10px 22px', fontSize: 12, whiteSpace: 'nowrap' }}>
               Reserve a Date
             </a>
           </nav>
@@ -690,7 +698,10 @@ const ghostButton: CSSProperties = {
   border: `1px solid ${LINE2}`, borderRadius: 999, padding: '15px 28px', cursor: 'pointer', textDecoration: 'none', lineHeight: 1.2,
 };
 
-const fullButton: CSSProperties = { display: 'block', width: '100%', textAlign: 'center', padding: '17px 24px', fontSize: 14 };
+/* border-box because this page has no CSS reset: width:100% plus 24px of
+   horizontal padding made the mobile drawer's CTA 48px wider than the
+   drawer, so it ran off the right edge of the screen at every width. */
+const fullButton: CSSProperties = { display: 'block', width: '100%', boxSizing: 'border-box', textAlign: 'center', padding: '17px 24px', fontSize: 14 };
 
 const labelStyle: CSSProperties = {
   display: 'block', fontFamily: FB, fontSize: 10.5, letterSpacing: '1.4px', textTransform: 'uppercase', color: DIM, marginBottom: 8, fontWeight: 500,
@@ -753,12 +764,16 @@ const KEYFRAMES = `
 .kk-live-dot{animation:kkGlow 2.4s ease-in-out infinite}
 .kk-navlink{transition:color .2s ease}
 .kk-navlink:hover{color:${GOLD}}
-.kk-desktop-nav{display:flex;align-items:center;gap:26px;margin-left:auto}
+.kk-desktop-nav{display:flex;align-items:center;gap:clamp(13px,1.6vw,26px);margin-left:auto}
 .kk-menu-toggle{display:none;align-items:center;gap:8px;margin-left:auto}
 .kk-mobile-menu{display:none;flex-direction:column;gap:2px;padding:8px 20px 18px;border-top:1px solid ${LINE};background:rgba(21,19,16,0.98)}
 .kk-mobile-link{display:block;padding:14px 6px;color:${CREAM};text-decoration:none;font-family:${FB};font-size:14px;letter-spacing:1.4px;text-transform:uppercase;border-bottom:1px solid ${LINE}}
 .kk-mobile-link:hover{color:${GOLD}}
-@media (max-width:760px){
+/* The drawer takes over at 1140px, not 760px. Seven links plus the CTA stop
+   fitting just above 1050px, and the old breakpoint let the nav run past the
+   header: between 760 and 1050px "Reserve a Date" was sliced off at the
+   viewport edge, with no scrollbar to reach it. Measured across 390–1600px. */
+@media (max-width:1140px){
   .kk-desktop-nav{display:none}
   .kk-menu-toggle{display:inline-flex}
   .kk-mobile-menu{display:flex}

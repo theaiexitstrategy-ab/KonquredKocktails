@@ -68,6 +68,7 @@ The portal has no Drinks tab yet, so the table is edited by hand today. The site
 - Known violation, out of scope for the collection PR: `/merch` uses "Add to Cart" and an aria-label of "Buy ‹product›".
 
 ## Stack
+- **Page-level CSS goes in a `<style dangerouslySetInnerHTML={{ __html: CSS }} />`, never `<style>{CSS}</style>`.** A `<style>` element is raw text to the HTML parser, so React's escaping of a text child ships `font-family:&quot;Outfit&quot;` and `content:&#x27;&#x27;` as literal CSS — dead rules until hydration rewrites them, plus a hydration mismatch on every page. Fixed across all pages 2026-10-07.
 - Next.js 14 App Router, deployed on Vercel. Stripe (deposits). Video on Mux via `@mux/mux-player-react`.
 - Deliberately minimal: no Tailwind, no auth, no middleware, no Stripe SDK. Every page is 100% inline-styled. Supabase is reached over REST from the server, for `/reviews` only.
 - Routes: `/`, `/book` (booking calendar), `/portfolio` (event log), `/reviews` (guest stories), `/merch` (storefront), plus `/api/book/*` and `/api/reviews`. All public.
@@ -114,7 +115,7 @@ Every event Stephen has composed, newest first, filterable by type and year. Not
 - **Autumn, Sept 22 – Nov 30** (visitor's local time), homepage only. Everything lives in `app/components/AutumnTheme.tsx` + `app/components/autumn-season.ts`; the mounts are four tags in `KkClient.tsx` and one inline script in `layout.tsx`. Deleting those retires the season completely.
 - Autumn, deliberately **not Halloween** — harvest, amber light, spiced and smoked flavour copy. iSlay Studios and The FLEX Facility run Halloween themes in October; this brand does not.
 - Preview out of season with `/?theme=autumn`; opt out in season with `/?theme=default`.
-- The seasonal markup always renders and only its **visibility** is seasonal (gated on `html.kk-autumn`), so server and client markup match. The class is set twice on purpose: a pre-paint script in `layout.tsx`, and an effect in `AutumnStyles` because this page fails hydration for unrelated reasons (see below) and React otherwise drops it.
+- The seasonal markup always renders and only its **visibility** is seasonal (gated on `html.kk-autumn`), so server and client markup match. The class is set twice on purpose: a pre-paint script in `layout.tsx`, plus a backstop effect in `AutumnStyles` — a hydration failure anywhere on the page makes React re-render the document and drop a script-set class.
 - Seasonal accent colours stay out of `app/theme.ts` — they are not brand tokens.
 
 ## Env vars (see `.env.local.example`)
@@ -143,6 +144,7 @@ The 402 is intentional, not a bug: without the connected account, charging would
 - Never commit raw MP4 masters to the repo or serve them un-optimized from `public/`.
 
 ## Current work log
+- 2026-10-07: Fixed hydration on every page — `<style>{CSS}</style>` shipped HTML-escaped CSS (`font-family:&quot;Outfit&quot;`), which is literal text inside a style element, so those rules were dead until hydration rewrote them. All eight pages now render with zero console errors. Header nav: CTA no longer wraps, and the drawer takes over at 1140px (was 760px, which left the nav overflowing the header between 760 and 1050px).
 - 2026-10-06: Added the autumn seasonal theme (band, drifting leaves, warmer hero wash), auto on Sept 22 – Nov 30.
 - 2026-09-14: Ava (Vapi) concierge: voice + chat test page, `capture_lead` tool into the portal, and portal email re-engagement (goelev8.ai-portal PR #91).
 - 2026-08-01: Replaced the three-package Experiences block with the 7-offering **Experience Collection** (+ Journey band, + Begin the Conversation CTA), rendered from `data/experiences.ts`. Added ESLint (was never configured).
@@ -162,7 +164,6 @@ Rating + a few sentences is a complete submission; name, email, event type, and 
 - Stephen has no approval UI yet. Until the portal Reviews tab exists, approving means `UPDATE reviews SET published = true, published_at = now()`.
 
 ## Open items / follow-ups
-- **The homepage fails hydration** (React #418/#423/#425, 6 errors, present before the autumn theme — Mux's custom element is the likely culprit). React throws the server HTML away and re-renders on the client, which costs a beat on first paint and wipes anything a pre-paint script sets on `<html>`. Worth a look.
 - Get logo files, fonts, and a written brand-voice guide from client (Drive folders are empty).
 - Set `STRIPE_SECRET_KEY` + `KB_STRIPE_CONNECTED_ACCOUNT_ID` in Vercel to take deposits live (site runs in demo mode until then).
 - The page still credits goElev8 in the footer (`/images/goelev8-full-logo.png`) — confirm that stays on the client's own domain.
