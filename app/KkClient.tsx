@@ -14,6 +14,9 @@ import {
 } from './theme';
 
 import { BeginTheConversation } from './components/ExperienceCollection';
+/* Seasonal dressing — autumn only, and only while html.kk-autumn is set.
+   Delete these four mounts with the component to retire the season. */
+import { AutumnStyles, AutumnBand, AutumnLeaves, AutumnWash } from './components/AutumnTheme';
 import DrinkOfTheWeek from './components/DrinkOfTheWeek';
 import { EXPERIENCE_COLLECTION } from '@/data/experiences';
 
@@ -66,6 +69,8 @@ export default function KkClient() {
     <main style={{ background: INK, color: TEXT, fontFamily: FB, fontWeight: 300, minHeight: '100vh', overflowX: 'hidden' }}>
       {/* Animation + a couple of pseudo-element effects that inline styles can't express. */}
       <style>{KEYFRAMES}</style>
+      <AutumnStyles />
+      <AutumnLeaves />
 
       {/* ── Sticky header ──────────────────────────────────────────── */}
       <header
@@ -140,6 +145,9 @@ export default function KkClient() {
         )}
       </header>
 
+      {/* Seasonal band — hidden outside autumn. */}
+      <AutumnBand />
+
       {/* ── Hero ───────────────────────────────────────────────────── */}
       <section style={{ ...shell, position: 'relative', paddingTop: 'clamp(36px, 6vw, 72px)', paddingBottom: 'clamp(36px, 6vw, 72px)' }}>
         {/* warm ambient wash — royal gold core with emerald depth and a
@@ -153,6 +161,8 @@ export default function KkClient() {
             `radial-gradient(52% 56% at 50% 44%, ${GOLD}1f 0%, transparent 62%)`,       // gold core
           ].join(', '),
         }} />
+        {/* Autumn lays ember and maple over that wash; no-op out of season. */}
+        <AutumnWash />
         {/* Single centered column: copy, then the animated drink medallion,
             then the CTAs directly beneath it. */}
         <div className="kk-fade-up" style={{

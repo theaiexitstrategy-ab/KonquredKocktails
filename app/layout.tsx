@@ -17,6 +17,10 @@
 //
 //   3. Load Google Analytics for every route.
 //
+//   4. Flag the autumn season on <html> before first paint, so the seasonal
+//      band renders in its final place instead of appearing after hydration
+//      and pushing the page down. See app/components/AutumnTheme.tsx.
+//
 // GA goes through next/script rather than raw <script> tags. In the App
 // Router a bare <script> in <head> is not guaranteed to execute the way it
 // does in plain HTML, and next/script also keeps the tag out of the critical
@@ -27,6 +31,7 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import AgeGate from './components/AgeGate';
+import { AUTUMN_SCRIPT } from './components/autumn-season';
 
 /** GA4 measurement ID. */
 const GA_ID = 'G-NTL8CFVYY6';
@@ -67,6 +72,10 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"
         />
+        {/* Seasonal flag. Must run before paint, so it is a plain inline
+            script rather than next/script — beforeInteractive still loads
+            after the first paint of a streamed RSC response. */}
+        <script dangerouslySetInnerHTML={{ __html: AUTUMN_SCRIPT }} />
       </head>
       <body style={{ margin: 0, padding: 0, background: '#151310' }}>
         {/* 21+ gate. Wraps every route; it exempts the compliance pages

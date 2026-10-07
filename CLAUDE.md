@@ -110,6 +110,13 @@ Every event Stephen has composed, newest first, filterable by type and year. Not
 - **Lead capture:** Ava's `capture_lead` tool → `POST /api/ava/lead` (header `x-ava-tool-secret` = `AVA_TOOL_SECRET`, injected at sync/chat time, never committed) → portal `experience-leads`, source `ava-voice` / `ava-chat`. The relationship label ("New inquiry" / "Returning inquiry" / "Past client") leads `goal`; the portal emails key off it.
 - **Re-engagement is email-only until a texting number exists** and lives in the portal (`lib/experience-reengage.js`, cron `/api/cron/experience-reengage` every 10 min). Inquiry series (Ava leads): Stephen alert + guest emails at 0h / 2d / 6d / 14d. Post-event (confirmed bookings, any source): +1d review request / +21d / +75d. Stops on deposit, cancel, `Do Not Contact` tag, or unsubscribe. Copy and cadence are edited in that one portal file. Pause with portal env `REENGAGE_PAUSED=1`.
 
+## Seasonal theming
+- **Autumn, Sept 22 – Nov 30** (visitor's local time), homepage only. Everything lives in `app/components/AutumnTheme.tsx` + `app/components/autumn-season.ts`; the mounts are four tags in `KkClient.tsx` and one inline script in `layout.tsx`. Deleting those retires the season completely.
+- Autumn, deliberately **not Halloween** — harvest, amber light, spiced and smoked flavour copy. iSlay Studios and The FLEX Facility run Halloween themes in October; this brand does not.
+- Preview out of season with `/?theme=autumn`; opt out in season with `/?theme=default`.
+- The seasonal markup always renders and only its **visibility** is seasonal (gated on `html.kk-autumn`), so server and client markup match. The class is set twice on purpose: a pre-paint script in `layout.tsx`, and an effect in `AutumnStyles` because this page fails hydration for unrelated reasons (see below) and React otherwise drops it.
+- Seasonal accent colours stay out of `app/theme.ts` — they are not brand tokens.
+
 ## Env vars (see `.env.local.example`)
 | Var | Purpose | Without it |
 |---|---|---|
@@ -136,6 +143,7 @@ The 402 is intentional, not a bug: without the connected account, charging would
 - Never commit raw MP4 masters to the repo or serve them un-optimized from `public/`.
 
 ## Current work log
+- 2026-10-06: Added the autumn seasonal theme (band, drifting leaves, warmer hero wash), auto on Sept 22 – Nov 30.
 - 2026-09-14: Ava (Vapi) concierge: voice + chat test page, `capture_lead` tool into the portal, and portal email re-engagement (goelev8.ai-portal PR #91).
 - 2026-08-01: Replaced the three-package Experiences block with the 7-offering **Experience Collection** (+ Journey band, + Begin the Conversation CTA), rendered from `data/experiences.ts`. Added ESLint (was never configured).
 - 2026-08-01: Added `/reviews`. Created `public.reviews` + the `event-photos` bucket. Granted `anon` EXECUTE on `public.locs_is_admin()` — four PUBLIC storage policies call it, and anon's lack of EXECUTE was erroring and blocking ALL anonymous uploads to every bucket.
@@ -154,6 +162,7 @@ Rating + a few sentences is a complete submission; name, email, event type, and 
 - Stephen has no approval UI yet. Until the portal Reviews tab exists, approving means `UPDATE reviews SET published = true, published_at = now()`.
 
 ## Open items / follow-ups
+- **The homepage fails hydration** (React #418/#423/#425, 6 errors, present before the autumn theme — Mux's custom element is the likely culprit). React throws the server HTML away and re-renders on the client, which costs a beat on first paint and wipes anything a pre-paint script sets on `<html>`. Worth a look.
 - Get logo files, fonts, and a written brand-voice guide from client (Drive folders are empty).
 - Set `STRIPE_SECRET_KEY` + `KB_STRIPE_CONNECTED_ACCOUNT_ID` in Vercel to take deposits live (site runs in demo mode until then).
 - The page still credits goElev8 in the footer (`/images/goelev8-full-logo.png`) — confirm that stays on the client's own domain.
