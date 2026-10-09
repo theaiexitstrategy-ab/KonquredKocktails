@@ -610,10 +610,10 @@ function Brand() {
           than being recoloured — the lion's face is white inside a black
           goblet, so inverting it for the dark page turns the mark inside out. */}
       <Image src="/images/kk-monogram.png" alt="Konquered Kocktails" width={760} height={383}
-        style={{ height: 40, width: 'auto', display: 'block', borderRadius: 8, border: `1px solid ${LINE2}`, background: '#fff' }} />
+        style={{ height: 36, width: 'auto', display: 'block', borderRadius: 7, border: `1px solid ${LINE2}`, background: '#fff' }} />
       <span style={{ lineHeight: 1 }}>
         {/* Wordmark stays Outfit — it matches the Konquered Balance logo. */}
-        <span style={{ display: 'block', fontFamily: FB, fontWeight: 600, fontSize: 22, letterSpacing: '0.02em', color: TEXT }}>
+        <span style={{ display: 'block', fontFamily: FB, fontWeight: 600, fontSize: 22, letterSpacing: '0.02em', color: TEXT, whiteSpace: 'nowrap' }}>
           Konquered Kocktails
         </span>
         <span style={{ display: 'block', fontFamily: FB, fontSize: 9, letterSpacing: '3px', textTransform: 'uppercase', color: GOLD, marginTop: 3, fontWeight: 500 }}>
@@ -817,11 +817,15 @@ const KEYFRAMES = `
 .kk-mobile-menu{display:none;flex-direction:column;gap:2px;padding:8px 20px 18px;border-top:1px solid ${LINE};background:rgba(21,19,16,0.98)}
 .kk-mobile-link{display:block;padding:14px 6px;color:${CREAM};text-decoration:none;font-family:${FB};font-size:14px;letter-spacing:1.4px;text-transform:uppercase;border-bottom:1px solid ${LINE}}
 .kk-mobile-link:hover{color:${GOLD}}
-/* The drawer takes over at 1140px, not 760px. Seven links plus the CTA stop
+/* The drawer takes over at 1180px, not 760px. Seven links plus the CTA stop
    fitting just above 1050px, and the old breakpoint let the nav run past the
    header: between 760 and 1050px "Reserve a Date" was sliced off at the
-   viewport edge, with no scrollbar to reach it. Measured across 390–1600px. */
-@media (max-width:1140px){
+   viewport edge, with no scrollbar to reach it. Measured across 390–1600px.
+   Raised twice as the brand block grew: 1140 -> 1180 when the circular logo
+   became the wider KK monogram plate, then -> 1240 so "Konquered Kocktails"
+   holds one line beside it. Measured on the live page: the nav fits at 1240
+   and overflows at 1200. */
+@media (max-width:1239px){
   .kk-desktop-nav{display:none}
   .kk-menu-toggle{display:inline-flex}
   .kk-mobile-menu{display:flex}

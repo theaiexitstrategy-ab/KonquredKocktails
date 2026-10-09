@@ -180,9 +180,9 @@ export default function ReviewsClient() {
                       than being recoloured — the lion's face is white inside a black
                       goblet, so inverting it for the dark page turns the mark inside out. */}
       <Image src="/images/kk-monogram.png" alt="Konquered Kocktails" width={760} height={383}
-                    style={{ height: 40, width: 'auto', display: 'block', borderRadius: 8, border: `1px solid ${LINE2}`, background: '#fff' }} />
+                    style={{ height: 36, width: 'auto', display: 'block', borderRadius: 7, border: `1px solid ${LINE2}`, background: '#fff' }} />
             <span style={{ lineHeight: 1 }}>
-              <span style={{ display: 'block', fontFamily: FB, fontWeight: 600, fontSize: 22, letterSpacing: '0.02em', color: TEXT }}>
+              <span style={{ display: 'block', fontFamily: FB, fontWeight: 600, fontSize: 22, letterSpacing: '0.02em', color: TEXT, whiteSpace: 'nowrap' }}>
                 Konquered Kocktails
               </span>
               <span style={{ display: 'block', fontFamily: FB, fontSize: 9, letterSpacing: '3px', textTransform: 'uppercase', color: GOLD, marginTop: 3, fontWeight: 500 }}>

@@ -135,6 +135,7 @@ The 402 is intentional, not a bug: without the connected account, charging would
 
 ## Logo + social
 - **The mark is `public/images/kk-monogram.png`** — the full KK monogram (both K's around the lion goblet) from the lockup the client supplied 2026-10-08. Used in every page header, the hero badge, the footer, and squared up as the favicon (`app/icon.png`, Next's file convention). `kk-lockup.png` adds the wordmark underneath, for anywhere with room for it.
+- The brand block (plate + wordmark on one line) needs ~300px, so the header drawer breakpoint is **1240px**. Measured on the live page: the nav fits at 1240 and overflows at 1200. Changing the logo size or the wordmark means re-measuring it.
 - **Do not crop the K's off.** A first pass used the goblet alone so it would fit the old 42px circular avatar; the K's are the logo's identity and the client rejected it. The brand slot is a wide plate now, not a disc, and the hero badge no longer spins — a rotating wide mark reads as a glitch where the old round seal read as a coin.
 - The artwork is **black ink on white**, so it sits on a white plate rather than being recoloured — the site is Warm Black and the ink would otherwise disappear. Do not invert it: the lion's face is white inside a black goblet, so inverting turns the mark inside out.
 - `public/images/kbalance-logo.jpg` is the parent **Konquered Balance** seal. No longer referenced; kept for the sibling-brand link.
@@ -152,7 +153,7 @@ The 402 is intentional, not a bug: without the connected account, charging would
 
 ## Current work log
 - 2026-10-08: Replaced the Konquered Balance seal with the full Konquered Kocktails KK monogram site-wide, added a favicon, and added an Instagram button (About block) + footer handle on the homepage.
-- 2026-10-07: Fixed hydration on every page — `<style>{CSS}</style>` shipped HTML-escaped CSS (`font-family:&quot;Outfit&quot;`), which is literal text inside a style element, so those rules were dead until hydration rewrote them. All eight pages now render with zero console errors. Header nav: CTA no longer wraps, and the drawer takes over at 1140px (was 760px, which left the nav overflowing the header between 760 and 1050px).
+- 2026-10-07: Fixed hydration on every page — `<style>{CSS}</style>` shipped HTML-escaped CSS (`font-family:&quot;Outfit&quot;`), which is literal text inside a style element, so those rules were dead until hydration rewrote them. All eight pages now render with zero console errors. Header nav: CTA no longer wraps, and the drawer takes over at 1140px (was 760px, which left the nav overflowing the header between 760 and 1050px). Raised again to 1240px on 2026-10-08 for the wider logo.
 - 2026-10-06: Added the autumn seasonal theme (band, drifting leaves, warmer hero wash), auto on Sept 22 – Nov 30.
 - 2026-09-14: Ava (Vapi) concierge: voice + chat test page, `capture_lead` tool into the portal, and portal email re-engagement (goelev8.ai-portal PR #91).
 - 2026-08-01: Replaced the three-package Experiences block with the 7-offering **Experience Collection** (+ Journey band, + Begin the Conversation CTA), rendered from `data/experiences.ts`. Added ESLint (was never configured).
