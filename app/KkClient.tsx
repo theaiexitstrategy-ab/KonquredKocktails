@@ -92,11 +92,17 @@ export default function KkClient() {
           borderBottom: `1px solid ${LINE}`,
         }}
       >
-        <div style={{
+        <div className="kk-header-row" style={{
           maxWidth: 1180, margin: '0 auto', padding: '14px 20px',
           display: 'flex', alignItems: 'center', gap: 16,
         }}>
           <Brand />
+          {/* Phone-only: on desktop the feed lives in the About block and the
+              footer, and the nav already fills the header. */}
+          <a href={INSTAGRAM} target="_blank" rel="noopener noreferrer"
+             className="kk-header-ig" aria-label={`Konquered Kocktails on Instagram (${INSTAGRAM_HANDLE})`}>
+            <InstagramGlyph size={18} />
+          </a>
           {/* Desktop nav — hidden below the mobile breakpoint (see kk-desktop-nav) */}
           <nav aria-label="Sections" className="kk-desktop-nav"
             style={{ fontFamily: FB, fontSize: 12, letterSpacing: '1.6px', textTransform: 'uppercase', fontWeight: 500 }}>
@@ -132,7 +138,8 @@ export default function KkClient() {
               fontFamily: FB, fontSize: 12, letterSpacing: '1.4px', textTransform: 'uppercase', fontWeight: 500,
             }}
           >
-            <span aria-hidden="true" style={{ fontSize: 15, lineHeight: 1 }}>{menuOpen ? '✕' : '☰'}</span>{' '}Menu
+            <span aria-hidden="true" style={{ fontSize: 15, lineHeight: 1 }}>{menuOpen ? '✕' : '☰'}</span>
+            <span className="kk-menu-label">Menu</span>
           </button>
         </div>
         {menuOpen && (
@@ -610,13 +617,16 @@ function Brand() {
           than being recoloured — the lion's face is white inside a black
           goblet, so inverting it for the dark page turns the mark inside out. */}
       <Image src="/images/kk-monogram.png" alt="Konquered Kocktails" width={760} height={383}
+        className="kk-brand-plate"
         style={{ height: 36, width: 'auto', display: 'block', borderRadius: 7, border: `1px solid ${LINE2}`, background: '#fff' }} />
       <span style={{ lineHeight: 1 }}>
-        {/* Wordmark stays Outfit — it matches the Konquered Balance logo. */}
-        <span style={{ display: 'block', fontFamily: FB, fontWeight: 600, fontSize: 22, letterSpacing: '0.02em', color: TEXT, whiteSpace: 'nowrap' }}>
+        {/* Wordmark stays Outfit — it matches the Konquered Balance logo.
+            Font sizes live in the kk-wordmark / kk-tagline classes so they
+            can shrink on phones (see the max-width:520px block). */}
+        <span className="kk-wordmark" style={{ display: 'block', fontFamily: FB, fontWeight: 600, letterSpacing: '0.02em', color: TEXT, whiteSpace: 'nowrap' }}>
           Konquered Kocktails
         </span>
-        <span style={{ display: 'block', fontFamily: FB, fontSize: 9, letterSpacing: '3px', textTransform: 'uppercase', color: GOLD, marginTop: 3, fontWeight: 500 }}>
+        <span className="kk-tagline" style={{ display: 'block', fontFamily: FB, textTransform: 'uppercase', color: GOLD, marginTop: 3, fontWeight: 500, whiteSpace: 'nowrap' }}>
           Kraft Kocktail Experiences
         </span>
       </span>
@@ -825,10 +835,28 @@ const KEYFRAMES = `
    became the wider KK monogram plate, then -> 1240 so "Konquered Kocktails"
    holds one line beside it. Measured on the live page: the nav fits at 1240
    and overflows at 1200. */
+.kk-header-ig{display:none;flex:none;align-items:center;justify-content:center;width:38px;height:38px;border-radius:999px;border:1px solid ${LINE2};color:${CREAM};text-decoration:none;transition:border-color .2s ease, color .2s ease}
+.kk-header-ig:hover{border-color:${GOLD};color:${GOLD}}
 @media (max-width:1239px){
   .kk-desktop-nav{display:none}
   .kk-menu-toggle{display:inline-flex}
   .kk-mobile-menu{display:flex}
+  .kk-header-ig{display:inline-flex}
+}
+.kk-wordmark{font-size:22px}
+.kk-tagline{font-size:9px;letter-spacing:3px}
+/* Phones. At full size the brand block alone is ~300px, which pushed the Menu
+   button past the right edge of a 390px screen. Here the plate and wordmark
+   scale with the viewport and Menu drops to its icon (the button keeps its
+   aria-label), so plate + wordmark + Instagram + menu fit down to 360px. */
+@media (max-width:520px){
+  .kk-header-row{gap:10px!important;padding:12px 16px!important}
+  .kk-brand-plate{height:30px!important}
+  .kk-wordmark{font-size:clamp(15px,4.4vw,20px)}
+  .kk-tagline{font-size:7.5px;letter-spacing:1.6px}
+  .kk-header-ig{width:36px;height:36px}
+  .kk-menu-toggle{width:36px;height:36px;padding:0!important;justify-content:center}
+  .kk-menu-label{display:none}
 }
 .kk-contact{transition:opacity .2s ease}
 .kk-contact:hover{opacity:.82}

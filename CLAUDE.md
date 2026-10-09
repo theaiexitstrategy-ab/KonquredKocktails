@@ -139,7 +139,8 @@ The 402 is intentional, not a bug: without the connected account, charging would
 - **Do not crop the K's off.** A first pass used the goblet alone so it would fit the old 42px circular avatar; the K's are the logo's identity and the client rejected it. The brand slot is a wide plate now, not a disc, and the hero badge no longer spins — a rotating wide mark reads as a glitch where the old round seal read as a coin.
 - The artwork is **black ink on white**, so it sits on a white plate rather than being recoloured — the site is Warm Black and the ink would otherwise disappear. Do not invert it: the lion's face is white inside a black goblet, so inverting turns the mark inside out.
 - `public/images/kbalance-logo.jpg` is the parent **Konquered Balance** seal. No longer referenced; kept for the sibling-brand link.
-- Instagram: `https://www.instagram.com/konquered_kocktails/`, in `KkClient.tsx` as `INSTAGRAM`. Button in the About block (beside the contact rows), handle in the footer. Homepage only.
+- Instagram: `https://www.instagram.com/konquered_kocktails/`, in `KkClient.tsx` as `INSTAGRAM`. Button in the About block (beside the contact rows), handle in the footer, and an icon beside the logo in the header **below the 1240px drawer breakpoint only** (desktop nav has no room). Homepage only.
+- Below 520px the header shrinks the plate + wordmark and drops Menu to its icon. Without that the ~300px brand block pushed the Menu button off a 390px screen. Measured fitting at 360 / 390 / 430.
 
 ## Asset source of truth
 - Client Google Drive (READ-ONLY — never edit): https://drive.google.com/drive/folders/1X8WXmzLMo55YspnCYhjnbIMlLb6NIDVv
