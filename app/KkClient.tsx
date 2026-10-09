@@ -34,6 +34,11 @@ const MENU_VIDEO_ID = 'aJAE59oLfQgbyWqAY1cs9avjbrCg6FsIJunL8cNr5nw';      // "Fr
    rather than navigating away from a booking in progress. */
 const KONQUERED_BALANCE = 'https://konqueredbalance.com';
 
+/* Where the work actually lives between events — the feed is the freshest
+   record of what Stephen is composing. */
+const INSTAGRAM = 'https://www.instagram.com/konquered_kocktails/';
+const INSTAGRAM_HANDLE = '@konquered_kocktails';
+
 /* Header / mobile-menu links — shared by desktop nav and the mobile drawer.
    Three kinds of target:
      'https://…'  external site — new tab
@@ -245,7 +250,7 @@ export default function KkClient() {
               </button>
               <div className="kk-badge">
                 <Image
-                  src="/images/kbalance-logo.jpg"
+                  src="/images/kk-mark.png"
                   alt="Konquered Kocktails seal"
                   width={120}
                   height={120}
@@ -389,6 +394,20 @@ export default function KkClient() {
               <ContactRow icon="✉" label="Email" value={CONTACT.email} href={`mailto:${CONTACT.email}`} />
               <ContactRow icon="✦" label="Based in" value={CONTACT.address} />
             </div>
+            {/* The feed is where the work between events lives, so the button
+                sits with the ways to reach Stephen rather than in the hero,
+                where it would compete with Reserve a Date. */}
+            <a href={INSTAGRAM} target="_blank" rel="noopener noreferrer"
+               className="kk-ghost-btn"
+               style={{
+                 ...ghostButton, marginTop: 22, display: 'inline-flex', alignItems: 'center',
+                 gap: 10, padding: '13px 24px', fontSize: 12.5, whiteSpace: 'nowrap',
+               }}>
+              <InstagramGlyph />
+              {/* Not the handle: this button is uppercased, and a handle in
+                  caps reads as a different name. The footer shows it verbatim. */}
+              Follow on Instagram
+            </a>
           </div>
           <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '1fr 1fr' }}>
             <div style={{ position: 'relative', aspectRatio: '3/4', borderRadius: 14, overflow: 'hidden', border: `1px solid ${LINE2}` }}>
@@ -527,6 +546,15 @@ export default function KkClient() {
           <div style={{ fontFamily: FB, fontSize: 12.5, color: MUTED, letterSpacing: '0.3px', lineHeight: 1.9 }}>
             <div>{CONTACT.phone} · {CONTACT.email}</div>
             <div>{CONTACT.address}</div>
+            <a href={INSTAGRAM} target="_blank" rel="noopener noreferrer"
+               className="kk-contact"
+               style={{
+                 display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 4,
+                 color: GOLD, textDecoration: 'none', fontWeight: 500,
+               }}>
+              <InstagramGlyph size={15} />
+              {INSTAGRAM_HANDLE}
+            </a>
           </div>
           {/* Sibling brand. Given its own line with context rather than
               dropped in with the legal links — it's a different service, and
@@ -578,7 +606,7 @@ export default function KkClient() {
 function Brand() {
   return (
     <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-      <Image src="/images/kbalance-logo.jpg" alt="Konquered Kocktails" width={42} height={42}
+      <Image src="/images/kk-mark.png" alt="Konquered Kocktails" width={42} height={42}
         style={{ height: 42, width: 42, display: 'block', borderRadius: '50%', border: `1px solid ${LINE2}` }} />
       <span style={{ lineHeight: 1 }}>
         {/* Wordmark stays Outfit — it matches the Konquered Balance logo. */}
@@ -590,6 +618,19 @@ function Brand() {
         </span>
       </span>
     </span>
+  );
+}
+
+/** Instagram glyph. Inline SVG on currentColor rather than an emoji or a
+ *  hosted icon: it inherits the button's colour on hover and costs nothing. */
+function InstagramGlyph({ size = 17 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+      <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" />
+      <circle cx="12" cy="12" r="4.4" />
+      <circle cx="17.6" cy="6.4" r="1.1" fill="currentColor" stroke="none" />
+    </svg>
   );
 }
 

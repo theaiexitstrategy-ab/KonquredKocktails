@@ -103,7 +103,7 @@ export default function ExperiencesClient() {
       <header style={headerStyle}>
         <div style={{ maxWidth: 1180, margin: '0 auto', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
           <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
-            <Image src="/images/kbalance-logo.jpg" alt="Konquered Kocktails" width={42} height={42}
+            <Image src="/images/kk-mark.png" alt="Konquered Kocktails" width={42} height={42}
               style={{ height: 42, width: 42, display: 'block', borderRadius: '50%', border: `1px solid ${LINE2}` }} />
             <span style={{ lineHeight: 1 }}>
               <span style={{ display: 'block', fontFamily: FB, fontWeight: 600, fontSize: 22, letterSpacing: '0.02em', color: TEXT }}>

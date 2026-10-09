@@ -133,6 +133,13 @@ Every event Stephen has composed, newest first, filterable by type and year. Not
 
 The 402 is intentional, not a bug: without the connected account, charging would route guest deposits into goElev8's balance, contradicting the "you keep 100% of the deposits" promise on the page. Never add a platform-charge fallback.
 
+## Logo + social
+- **The mark is `public/images/kk-mark.png`** — the lion goblet at the centre of the Konquered Kocktails lockup the client supplied (2026-10-08), isolated from the KK arms behind it. Used in every page header, the hero badge, the footer, and as the favicon (`app/icon.png`, Next's file convention).
+- The artwork is **black ink on white**, so it sits on a white disc rather than being recoloured — the site is Warm Black and the ink would otherwise disappear. Do not invert it: the lion's face is white inside a black goblet, so inverting breaks the mark.
+- The full lockup (monogram + wordmark) was NOT used — the header already sets the wordmark in Outfit beside the mark. The source file is in the client Drive if a lockup is ever wanted (age gate, OG image).
+- `public/images/kbalance-logo.jpg` is the parent **Konquered Balance** seal. No longer referenced; kept for the sibling-brand link.
+- Instagram: `https://www.instagram.com/konquered_kocktails/`, in `KkClient.tsx` as `INSTAGRAM`. Button in the About block (beside the contact rows), handle in the footer. Homepage only.
+
 ## Asset source of truth
 - Client Google Drive (READ-ONLY — never edit): https://drive.google.com/drive/folders/1X8WXmzLMo55YspnCYhjnbIMlLb6NIDVv
 - Owner: stephen@konqueredbalance.com
@@ -144,6 +151,7 @@ The 402 is intentional, not a bug: without the connected account, charging would
 - Never commit raw MP4 masters to the repo or serve them un-optimized from `public/`.
 
 ## Current work log
+- 2026-10-08: Replaced the Konquered Balance seal with the new Konquered Kocktails mark site-wide, added a favicon, and added an Instagram button (About block) + footer handle on the homepage.
 - 2026-10-07: Fixed hydration on every page — `<style>{CSS}</style>` shipped HTML-escaped CSS (`font-family:&quot;Outfit&quot;`), which is literal text inside a style element, so those rules were dead until hydration rewrote them. All eight pages now render with zero console errors. Header nav: CTA no longer wraps, and the drawer takes over at 1140px (was 760px, which left the nav overflowing the header between 760 and 1050px).
 - 2026-10-06: Added the autumn seasonal theme (band, drifting leaves, warmer hero wash), auto on Sept 22 – Nov 30.
 - 2026-09-14: Ava (Vapi) concierge: voice + chat test page, `capture_lead` tool into the portal, and portal email re-engagement (goelev8.ai-portal PR #91).
