@@ -250,12 +250,12 @@ export default function KkClient() {
               </button>
               <div className="kk-badge">
                 <Image
-                  src="/images/kk-mark.png"
-                  alt="Konquered Kocktails seal"
-                  width={120}
-                  height={120}
+                  src="/images/kk-monogram.png"
+                  alt="Konquered Kocktails"
+                  width={760}
+                  height={383}
                   priority
-                  style={{ width: '100%', height: '100%', display: 'block' }}
+                  style={{ width: '100%', height: '100%', display: 'block', objectFit: 'contain' }}
                 />
               </div>
             </div>
@@ -606,8 +606,11 @@ export default function KkClient() {
 function Brand() {
   return (
     <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-      <Image src="/images/kk-mark.png" alt="Konquered Kocktails" width={42} height={42}
-        style={{ height: 42, width: 42, display: 'block', borderRadius: '50%', border: `1px solid ${LINE2}` }} />
+      {/* The logo is black ink on white, so it sits on a light plate rather
+          than being recoloured — the lion's face is white inside a black
+          goblet, so inverting it for the dark page turns the mark inside out. */}
+      <Image src="/images/kk-monogram.png" alt="Konquered Kocktails" width={760} height={383}
+        style={{ height: 40, width: 'auto', display: 'block', borderRadius: 8, border: `1px solid ${LINE2}`, background: '#fff' }} />
       <span style={{ lineHeight: 1 }}>
         {/* Wordmark stays Outfit — it matches the Konquered Balance logo. */}
         <span style={{ display: 'block', fontFamily: FB, fontWeight: 600, fontSize: 22, letterSpacing: '0.02em', color: TEXT }}>
@@ -786,9 +789,13 @@ const KEYFRAMES = `
 .kk-phone-screen{position:relative;width:100%;height:100%;border-radius:36px;overflow:hidden;background:#000}
 .kk-phone-island{position:absolute;top:14px;left:50%;transform:translateX(-50%);
   width:32%;height:19px;background:#000;border-radius:20px;z-index:4;box-shadow:0 0 0 1px rgba(255,255,255,0.06)}
-.kk-badge{position:absolute;z-index:5;bottom:-10px;left:50%;transform:translateX(-50%);
-  width:58px;height:58px;border-radius:50%;overflow:hidden;border:2px solid ${GOLD};
-  box-shadow:0 8px 20px rgba(0,0,0,0.55),0 0 18px ${GOLD}55;animation:kkSpin 22s linear infinite}
+/* A plate, not a disc: the monogram is two K's wide and a circle would
+   crop them off. It no longer spins for the same reason — a rotating
+   wordmark-shaped mark reads as a glitch, where the old round seal read as
+   a coin. */
+.kk-badge{position:absolute;z-index:5;bottom:-14px;left:50%;transform:translateX(-50%);
+  width:104px;height:54px;border-radius:12px;overflow:hidden;border:2px solid ${GOLD};background:#fff;
+  box-shadow:0 8px 20px rgba(0,0,0,0.55),0 0 18px ${GOLD}55}
 .kk-sound-btn{position:absolute;z-index:6;bottom:18px;right:16px;width:40px;height:40px;border-radius:50%;
   display:grid;place-items:center;cursor:pointer;color:${CREAM};
   background:rgba(10,10,10,0.55);border:1px solid ${GOLD};
