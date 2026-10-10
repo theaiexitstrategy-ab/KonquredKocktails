@@ -83,64 +83,37 @@ export default function KkClient() {
       <AutumnLeaves />
 
       {/* ── Sticky header ──────────────────────────────────────────── */}
-      <header
-        style={{
-          position: 'sticky', top: 0, zIndex: 50,
-          background: 'rgba(10,10,10,0.86)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          borderBottom: `1px solid ${LINE}`,
-        }}
-      >
-        <div className="kk-header-row" style={{
-          maxWidth: 1180, margin: '0 auto', padding: '14px 20px',
-          display: 'flex', alignItems: 'center', gap: 16,
-        }}>
-          <Brand />
-          {/* Phone-only: on desktop the feed lives in the About block and the
-              footer, and the nav already fills the header. */}
-          <a href={INSTAGRAM} target="_blank" rel="noopener noreferrer"
-             className="kk-header-ig" aria-label={`Konquered Kocktails on Instagram (${INSTAGRAM_HANDLE})`}>
-            <InstagramGlyph size={18} />
+      {/* Centred crest: "Konquered" [mark] "Kocktails" over Instagram /
+          slug line / menu. The menu drawer is the nav at every width. */}
+      <header style={{ position: 'sticky', top: 0, zIndex: 50, background: INK, borderBottom: `1px solid ${LINE}` }}>
+        <div className="kk-crest">
+          {/* One link for the whole lockup. The aria-label names it once —
+              otherwise it would read "Konquered, Konquered Kocktails, Kocktails". */}
+          <a href="/" className="kk-crest-lockup" aria-label="Konquered Kocktails — home">
+            <span className="kk-crest-word" style={{ textAlign: 'right' }}>Konquered</span>
+            {/* Black ink on white, so it keeps its white plate — inverting it
+                turns the lion's face inside out. */}
+            <Image src="/images/kk-monogram.png" alt="Konquered Kocktails" width={760} height={383}
+              priority className="kk-crest-mark" />
+            <span className="kk-crest-word" style={{ textAlign: 'left' }}>Kocktails</span>
           </a>
-          {/* Desktop nav — hidden below the mobile breakpoint (see kk-desktop-nav) */}
-          <nav aria-label="Sections" className="kk-desktop-nav"
-            style={{ fontFamily: FB, fontSize: 12, letterSpacing: '1.6px', textTransform: 'uppercase', fontWeight: 500 }}>
-            {NAV_LINKS.map(([label, target]) => (
-              <a key={target}
-                 href={isRoute(target) ? target : `#${target}`}
-                 onClick={isRoute(target) ? undefined : (e) => smoothScrollTo(e, target)}
-                 {...(isExternal(target) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                 className="kk-navlink"
-                 style={{ color: MUTED, textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                {label}
-              </a>
-            ))}
-            {/* nowrap here, not on goldButton: as a flex item this button gets
-                squeezed by the links beside it and broke to "RESERVE A / DATE".
-                The page's other gold buttons are free to wrap on narrow screens. */}
-            <a href="/book"
-               className="kk-gold-btn" style={{ ...goldButton, padding: '10px 22px', fontSize: 12, whiteSpace: 'nowrap' }}>
-              Reserve a Date
+          <div className="kk-crest-row2">
+            <a href={INSTAGRAM} target="_blank" rel="noopener noreferrer"
+               className="kk-crest-btn" aria-label={`Konquered Kocktails on Instagram (${INSTAGRAM_HANDLE})`}>
+              <InstagramGlyph size={18} />
             </a>
-          </nav>
-          {/* Mobile menu tab — only shown below the breakpoint (see kk-menu-toggle) */}
-          <button
-            type="button"
-            className="kk-menu-toggle"
-            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-            aria-expanded={menuOpen}
-            aria-controls="kk-mobile-menu"
-            onClick={() => setMenuOpen((o) => !o)}
-            style={{
-              background: 'transparent', color: CREAM, border: `1px solid ${LINE2}`,
-              borderRadius: 999, padding: '9px 16px', cursor: 'pointer',
-              fontFamily: FB, fontSize: 12, letterSpacing: '1.4px', textTransform: 'uppercase', fontWeight: 500,
-            }}
-          >
-            <span aria-hidden="true" style={{ fontSize: 15, lineHeight: 1 }}>{menuOpen ? '✕' : '☰'}</span>
-            <span className="kk-menu-label">Menu</span>
-          </button>
+            <span className="kk-crest-slug">Kraft Kocktail Experiences</span>
+            <button
+              type="button"
+              className="kk-crest-btn"
+              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={menuOpen}
+              aria-controls="kk-mobile-menu"
+              onClick={() => setMenuOpen((o) => !o)}
+            >
+              <span aria-hidden="true" style={{ fontSize: 16, lineHeight: 1 }}>{menuOpen ? '✕' : '☰'}</span>
+            </button>
+          </div>
         </div>
         {menuOpen && (
           <nav id="kk-mobile-menu" className="kk-mobile-menu" aria-label="Menu">
@@ -822,41 +795,34 @@ const KEYFRAMES = `
 .kk-live-dot{animation:kkGlow 2.4s ease-in-out infinite}
 .kk-navlink{transition:color .2s ease}
 .kk-navlink:hover{color:${GOLD}}
-.kk-desktop-nav{display:flex;align-items:center;gap:clamp(13px,1.6vw,26px);margin-left:auto}
-.kk-menu-toggle{display:none;align-items:center;gap:8px;margin-left:auto}
-.kk-mobile-menu{display:none;flex-direction:column;gap:2px;padding:8px 20px 18px;border-top:1px solid ${LINE};background:rgba(21,19,16,0.98)}
+.kk-mobile-menu{display:flex;flex-direction:column;gap:2px;padding:8px max(20px, calc((100% - 560px) / 2)) 18px;border-top:1px solid ${LINE};background:rgba(21,19,16,0.98)}
 .kk-mobile-link{display:block;padding:14px 6px;color:${CREAM};text-decoration:none;font-family:${FB};font-size:14px;letter-spacing:1.4px;text-transform:uppercase;border-bottom:1px solid ${LINE}}
 .kk-mobile-link:hover{color:${GOLD}}
-/* The drawer takes over at 1180px, not 760px. Seven links plus the CTA stop
-   fitting just above 1050px, and the old breakpoint let the nav run past the
-   header: between 760 and 1050px "Reserve a Date" was sliced off at the
-   viewport edge, with no scrollbar to reach it. Measured across 390–1600px.
-   Raised twice as the brand block grew: 1140 -> 1180 when the circular logo
-   became the wider KK monogram plate, then -> 1240 so "Konquered Kocktails"
-   holds one line beside it. Measured on the live page: the nav fits at 1240
-   and overflows at 1200. */
-.kk-header-ig{display:none;flex:none;align-items:center;justify-content:center;width:38px;height:38px;border-radius:999px;border:1px solid ${LINE2};color:${CREAM};text-decoration:none;transition:border-color .2s ease, color .2s ease}
-.kk-header-ig:hover{border-color:${GOLD};color:${GOLD}}
-@media (max-width:1239px){
-  .kk-desktop-nav{display:none}
-  .kk-menu-toggle{display:inline-flex}
-  .kk-mobile-menu{display:flex}
-  .kk-header-ig{display:inline-flex}
+/* Header crest. The words scale with the viewport rather than wrap or
+   truncate: at 360px each side cell is ~105px, which holds "Konquered" at
+   ~20px. minmax(0,1fr) keeps the two side cells equal so the mark stays
+   centred whichever word is wider. */
+.kk-crest{max-width:1180px;margin:0 auto;padding:18px 14px 14px;display:grid;row-gap:10px}
+.kk-crest-lockup{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;column-gap:14px;text-decoration:none;border-radius:10px}
+.kk-crest-word{font-family:${FB};font-weight:600;letter-spacing:0.02em;color:${TEXT};white-space:nowrap;line-height:1;font-size:clamp(17px,5.6vw,23px)}
+.kk-crest-mark{display:block;width:94px;height:auto;border-radius:8px;border:1px solid ${LINE2};background:#fff}
+.kk-crest-row2{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;justify-items:center}
+.kk-crest-slug{font-family:${FB};font-weight:500;text-transform:uppercase;color:${GOLD};font-size:10px;letter-spacing:0.3em;margin-right:-0.3em;text-align:center;white-space:nowrap}
+.kk-crest-btn{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:44px;height:44px;padding:0;border-radius:999px;border:1px solid ${LINE2};background:transparent;color:${CREAM};text-decoration:none;cursor:pointer;transition:border-color .2s ease, color .2s ease}
+.kk-crest-btn:hover{border-color:${GOLD};color:${GOLD}}
+.kk-crest-lockup:focus-visible,.kk-crest-btn:focus-visible{outline:2px solid ${GOLD};outline-offset:3px}
+@media (min-width:768px){
+  .kk-crest-word{font-size:32px}
+  .kk-crest-mark{width:120px;border-radius:10px}
+  .kk-crest-slug{font-size:12px}
 }
+/* Footer brand block. */
 .kk-wordmark{font-size:22px}
 .kk-tagline{font-size:9px;letter-spacing:3px}
-/* Phones. At full size the brand block alone is ~300px, which pushed the Menu
-   button past the right edge of a 390px screen. Here the plate and wordmark
-   scale with the viewport and Menu drops to its icon (the button keeps its
-   aria-label), so plate + wordmark + Instagram + menu fit down to 360px. */
 @media (max-width:520px){
-  .kk-header-row{gap:10px!important;padding:12px 16px!important}
   .kk-brand-plate{height:30px!important}
   .kk-wordmark{font-size:clamp(15px,4.4vw,20px)}
   .kk-tagline{font-size:7.5px;letter-spacing:1.6px}
-  .kk-header-ig{width:36px;height:36px}
-  .kk-menu-toggle{width:36px;height:36px;padding:0!important;justify-content:center}
-  .kk-menu-label{display:none}
 }
 .kk-contact{transition:opacity .2s ease}
 .kk-contact:hover{opacity:.82}

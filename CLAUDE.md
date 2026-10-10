@@ -135,12 +135,11 @@ The 402 is intentional, not a bug: without the connected account, charging would
 
 ## Logo + social
 - **The mark is `public/images/kk-monogram.png`** — the full KK monogram (both K's around the lion goblet) from the lockup the client supplied 2026-10-08. Used in every page header, the hero badge, the footer, and squared up as the favicon (`app/icon.png`, Next's file convention). `kk-lockup.png` adds the wordmark underneath, for anywhere with room for it.
-- The brand block (plate + wordmark on one line) needs ~300px, so the header drawer breakpoint is **1240px**. Measured on the live page: the nav fits at 1240 and overflows at 1200. Changing the logo size or the wordmark means re-measuring it.
+- **Homepage header is a centred crest** (since 2026-10-10): row 1 is "Konquered" [monogram] "Kocktails" on a `minmax(0,1fr) auto minmax(0,1fr)` grid, the whole lockup linking to `/`; row 2 is Instagram / "Kraft Kocktail Experiences" / menu. The menu drawer is the nav at **every** width — there is no inline desktop nav, so "Reserve a Date" lives in the drawer. Words clamp to ~20px at 360px rather than wrap; measured clean at 360 / 390 / 768 / 1280. CSS is the `kk-crest-*` rules in `KkClient.tsx`. The other pages keep their own older headers.
 - **Do not crop the K's off.** A first pass used the goblet alone so it would fit the old 42px circular avatar; the K's are the logo's identity and the client rejected it. The brand slot is a wide plate now, not a disc, and the hero badge no longer spins — a rotating wide mark reads as a glitch where the old round seal read as a coin.
 - The artwork is **black ink on white**, so it sits on a white plate rather than being recoloured — the site is Warm Black and the ink would otherwise disappear. Do not invert it: the lion's face is white inside a black goblet, so inverting turns the mark inside out.
 - `public/images/kbalance-logo.jpg` is the parent **Konquered Balance** seal. No longer referenced; kept for the sibling-brand link.
-- Instagram: `https://www.instagram.com/konquered_kocktails/`, in `KkClient.tsx` as `INSTAGRAM`. Button in the About block (beside the contact rows), handle in the footer, and an icon beside the logo in the header **below the 1240px drawer breakpoint only** (desktop nav has no room). Homepage only.
-- Below 520px the header shrinks the plate + wordmark and drops Menu to its icon. Without that the ~300px brand block pushed the Menu button off a 390px screen. Measured fitting at 360 / 390 / 430.
+- Instagram: `https://www.instagram.com/konquered_kocktails/`, in `KkClient.tsx` as `INSTAGRAM`. Button in the About block (beside the contact rows), handle in the footer, and a 44px icon button at the left of the header's second row at every width. Homepage only.
 
 ## Asset source of truth
 - Client Google Drive (READ-ONLY — never edit): https://drive.google.com/drive/folders/1X8WXmzLMo55YspnCYhjnbIMlLb6NIDVv
@@ -153,6 +152,7 @@ The 402 is intentional, not a bug: without the connected account, charging would
 - Never commit raw MP4 masters to the repo or serve them un-optimized from `public/`.
 
 ## Current work log
+- 2026-10-10: Redesigned the homepage header as a centred crest lockup (see Logo + social). Removed the inline desktop nav; the drawer is the nav at every width.
 - 2026-10-08: Replaced the Konquered Balance seal with the full Konquered Kocktails KK monogram site-wide, added a favicon, and added an Instagram button (About block) + footer handle on the homepage.
 - 2026-10-07: Fixed hydration on every page — `<style>{CSS}</style>` shipped HTML-escaped CSS (`font-family:&quot;Outfit&quot;`), which is literal text inside a style element, so those rules were dead until hydration rewrote them. All eight pages now render with zero console errors. Header nav: CTA no longer wraps, and the drawer takes over at 1140px (was 760px, which left the nav overflowing the header between 760 and 1050px). Raised again to 1240px on 2026-10-08 for the wider logo.
 - 2026-10-06: Added the autumn seasonal theme (band, drifting leaves, warmer hero wash), auto on Sept 22 – Nov 30.
