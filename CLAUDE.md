@@ -74,6 +74,15 @@ The portal has no Drinks tab yet, so the table is edited by hand today. The site
 - Routes: `/`, `/book` (booking calendar), `/portfolio` (event log), `/reviews` (guest stories), `/merch` (storefront), plus `/api/book/*` and `/api/reviews`. All public.
 - Brand tokens (palette + the two typefaces) live in `app/theme.ts` — both pages import from it so they can't drift.
 
+## Hero video — chosen in the portal
+Stephen swaps the homepage hero video in the portal (Portfolio tab → "Set as homepage hero"). No redeploy.
+
+- read: `GET {PORTAL_URL}/api/external/hero-video?slug={PORTAL_SLUG}` → `{ hero: { playback_id, title, aspect_ratio, updated_at } | null }`. Server-side in `lib/hero-video.ts`, passed into `KkClient` as `heroPlaybackId`.
+- `app/page.tsx` sets `revalidate = 60`, so a change goes live within about a minute.
+- **Any failure falls back to `DEFAULT_HERO_PLAYBACK_ID`** (the original loop): portal down, a 2.5s timeout, 404, `hero: null`, or a malformed id. The phone frame must never render empty.
+- The frame is portrait (9:19, cover-cropped), so a landscape clip loses its sides. The portal warns about this; the site doesn't police it.
+- Portal side: `client_portfolio_videos.is_hero`, unique per tenant. Hero eligibility ignores `is_active`, so a hero-only clip can stay out of the event log.
+
 ## /merch — portal-driven storefront
 Same format as `theflexfacility.com/merch`, `islaystudiosllc.com/merch`, and `willpowerfitnessfactory.com/merch`. **The GoElev8 portal is the catalog** — nothing about the products is hardcoded here. Stephen lists / hides / re-prices / re-photographs merch in the portal Merch tab and it appears on the next page load. No redeploy.
 
@@ -152,6 +161,7 @@ The 402 is intentional, not a bug: without the connected account, charging would
 - Never commit raw MP4 masters to the repo or serve them un-optimized from `public/`.
 
 ## Current work log
+- 2026-10-10: The hero video is now chosen in the portal (`lib/hero-video.ts`), falling back to the original loop.
 - 2026-10-10: Redesigned the homepage header as a centred crest lockup (see Logo + social). Removed the inline desktop nav; the drawer is the nav at every width.
 - 2026-10-08: Replaced the Konquered Balance seal with the full Konquered Kocktails KK monogram site-wide, added a favicon, and added an Instagram button (About block) + footer handle on the homepage.
 - 2026-10-07: Fixed hydration on every page — `<style>{CSS}</style>` shipped HTML-escaped CSS (`font-family:&quot;Outfit&quot;`), which is literal text inside a style element, so those rules were dead until hydration rewrote them. All eight pages now render with zero console errors. Header nav: CTA no longer wraps, and the drawer takes over at 1140px (was 760px, which left the nav overflowing the header between 760 and 1050px). Raised again to 1240px on 2026-10-08 for the wider logo.

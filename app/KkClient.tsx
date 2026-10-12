@@ -24,8 +24,8 @@ import { EXPERIENCE_COLLECTION } from '@/data/experiences';
    custom element can't render during SSR, so load it client-side only. */
 const MuxPlayer = dynamic(() => import('@mux/mux-player-react'), { ssr: false });
 
-/* Public Mux playback IDs. */
-const HERO_VIDEO_ID = 'FSsAfj00KwDZSPPaApJjMHqx5msnrneNULZFEdDov01g8';   // silent background loop
+/* Public Mux playback IDs. The hero's comes in as a prop — Stephen picks it
+   in the portal (lib/hero-video.ts). */
 const ABOUT_VIDEO_ID = 'MOxiZEb302JK1hwfkQzUQU3EDriQ401stR1CoSrTx02lq00'; // Gentleman Jack feature
 const MENU_VIDEO_ID = 'aJAE59oLfQgbyWqAY1cs9avjbrCg6FsIJunL8cNr5nw';      // "From the studio" feature
 
@@ -66,7 +66,7 @@ function smoothScrollTo(e: React.MouseEvent<HTMLAnchorElement>, id: string) {
   el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-export default function KkClient() {
+export default function KkClient({ heroPlaybackId }: { heroPlaybackId: string }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [heroMuted, setHeroMuted] = useState(true);
 
@@ -192,7 +192,7 @@ export default function KkClient() {
               <div className="kk-phone-island" />
               <div className="kk-phone-screen">
                 <MuxPlayer
-                  playbackId={HERO_VIDEO_ID}
+                  playbackId={heroPlaybackId}
                   streamType="on-demand"
                   autoPlay="muted"
                   loop

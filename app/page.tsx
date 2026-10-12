@@ -23,6 +23,12 @@
 // konqueredbalance.com/konqueredkocktails and self-hosted under /images/kk.
 
 import KkClient from './KkClient';
+import { getHeroPlaybackId } from '@/lib/hero-video';
+
+/* The hero video is chosen in the portal (see lib/hero-video.ts). Re-read it
+   at most once a minute. Must be a literal — Next reads it statically, and it
+   should match HERO_REVALIDATE_SECONDS. */
+export const revalidate = 60;
 
 export const metadata = {
   title: 'Konquered Kocktails — An Art Gallery in a Glass',
@@ -44,6 +50,6 @@ export const metadata = {
   },
 };
 
-export default function KkPage() {
-  return <KkClient />;
+export default async function KkPage() {
+  return <KkClient heroPlaybackId={await getHeroPlaybackId()} />;
 }

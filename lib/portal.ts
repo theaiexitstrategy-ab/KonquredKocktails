@@ -13,7 +13,7 @@
 // /api/external/checkout are deliberately public with open CORS, so the
 // browser calls those directly.
 
-const PORTAL_URL =
+export const PORTAL_URL =
   process.env.PORTAL_URL ||
   process.env.NEXT_PUBLIC_PORTAL_URL ||
   'https://portal.goelev8.ai';
