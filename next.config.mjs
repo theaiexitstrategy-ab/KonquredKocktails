@@ -1,11 +1,22 @@
 // (c) 2026 GoElev8.ai | Aaron Bryant. All rights reserved.
 //
 // Konquered Kocktails: /, /book, /portfolio, /reviews, /merch, plus the
-// /api/book/* proxies and /api/reviews. All styling inline, all video on Mux,
-// so there's nothing here for image remote patterns or rewrites.
+// /api/book/* proxies and /api/reviews. All styling inline, all video on Mux;
+// the one remote image host is the event-flyer bucket below.
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  images: {
+    // Event flyers (Upcoming Experiences) — Stephen uploads them in the
+    // portal to the public event-photos bucket. Scoped to that one bucket.
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'bnkoqybkmwtrlorhowyv.supabase.co',
+        pathname: '/storage/v1/object/public/event-photos/**',
+      },
+    ],
+  },
   async redirects() {
     return [
       {

@@ -24,6 +24,7 @@
 
 import KkClient from './KkClient';
 import { getHeroPlaybackId } from '@/lib/hero-video';
+import { getUpcomingEvents, eventsJsonLd } from '@/lib/events';
 
 /* The hero video is chosen in the portal (see lib/hero-video.ts). Re-read it
    at most once a minute. Must be a literal — Next reads it statically, and it
@@ -51,5 +52,15 @@ export const metadata = {
 };
 
 export default async function KkPage() {
-  return <KkClient heroPlaybackId={await getHeroPlaybackId()} />;
+  const [heroPlaybackId, events] = await Promise.all([getHeroPlaybackId(), getUpcomingEvents()]);
+  return (
+    <>
+      {events.length > 0 && (
+        <script type="application/ld+json"
+          // `<` escaped so a title can't close the script element.
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(eventsJsonLd(events)).replace(/</g, '\\u003c') }} />
+      )}
+      <KkClient heroPlaybackId={heroPlaybackId} events={events} />
+    </>
+  );
 }

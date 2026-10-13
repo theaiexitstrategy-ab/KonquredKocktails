@@ -18,6 +18,8 @@ import { BeginTheConversation } from './components/ExperienceCollection';
    Delete these four mounts with the component to retire the season. */
 import { AutumnStyles, AutumnBand, AutumnLeaves, AutumnWash } from './components/AutumnTheme';
 import DrinkOfTheWeek from './components/DrinkOfTheWeek';
+import UpcomingExperiences from './components/UpcomingExperiences';
+import type { KkEvent } from '@/lib/event-format';
 import { EXPERIENCE_COLLECTION } from '@/data/experiences';
 
 /* Videos are hosted on Mux — nothing lives in the repo. The <mux-player>
@@ -66,7 +68,12 @@ function smoothScrollTo(e: React.MouseEvent<HTMLAnchorElement>, id: string) {
   el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-export default function KkClient({ heroPlaybackId }: { heroPlaybackId: string }) {
+export default function KkClient({ heroPlaybackId, events }: { heroPlaybackId: string; events: KkEvent[] }) {
+  /* "Events" joins the menu only while there's something upcoming — the
+     section itself disappears when the list is empty. */
+  const navLinks: [string, string][] = events.length
+    ? NAV_LINKS.flatMap((l) => (l[1] === 'menu' ? [l, ['Events', 'events'] as [string, string]] : [l]))
+    : NAV_LINKS;
   const [menuOpen, setMenuOpen] = useState(false);
   const [heroMuted, setHeroMuted] = useState(true);
 
@@ -117,7 +124,7 @@ export default function KkClient({ heroPlaybackId }: { heroPlaybackId: string })
         </div>
         {menuOpen && (
           <nav id="kk-mobile-menu" className="kk-mobile-menu" aria-label="Menu">
-            {NAV_LINKS.map(([label, target]) => (
+            {navLinks.map(([label, target]) => (
               <a key={target}
                  href={isRoute(target) ? target : `#${target}`}
                  {...(isExternal(target) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
@@ -353,6 +360,22 @@ export default function KkClient({ heroPlaybackId }: { heroPlaybackId: string })
           </div>
         </div>
       </section>
+
+      {/* ── Upcoming Experiences ───────────────────────────────────── */}
+      {/* Portal-driven (kk_events). Absent entirely when nothing is upcoming. */}
+      {events.length > 0 && (
+        <>
+          <GoldDivider />
+          <section id="events" style={{ ...shell, ...sectionPad }}>
+            <SectionHead
+              eyebrow="Out in the world"
+              title={<>Upcoming <em style={{ color: GOLD }}>Experiences</em></>}
+              sub="Join us where intention meets the glass."
+            />
+            <UpcomingExperiences events={events} />
+          </section>
+        </>
+      )}
 
       <GoldDivider />
 

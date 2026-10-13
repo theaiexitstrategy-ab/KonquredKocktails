@@ -51,7 +51,12 @@ export type SbResult<T> =
 /** PostgREST call against a table in the public schema. */
 export async function sb<T>(
   path: string,
-  init: { method: 'GET' | 'POST'; body?: unknown; prefer?: string } = { method: 'GET' },
+  init: {
+    method: 'GET' | 'POST'; body?: unknown; prefer?: string;
+    /** Seconds. Lets a GET sit in Next's data cache. Without it every call is
+     *  no-store, which would turn a statically regenerated page dynamic. */
+    revalidate?: number;
+  } = { method: 'GET' },
 ): Promise<SbResult<T>> {
   if (!SUPABASE_ANON_KEY) {
     return { ok: false, status: 503, error: 'Reviews aren’t connected yet.' };
@@ -64,7 +69,7 @@ export async function sb<T>(
         ...(init.prefer ? { Prefer: init.prefer } : {}),
       }),
       ...(init.body ? { body: JSON.stringify(init.body) } : {}),
-      cache: 'no-store',
+      ...(init.revalidate ? { next: { revalidate: init.revalidate } } : { cache: 'no-store' as const }),
     });
     const text = await res.text();
     const data = text ? JSON.parse(text) : null;
@@ -84,6 +89,10 @@ export async function sb<T>(
     return { ok: false, status: 502, error: 'Could not reach the review service.' };
   }
 }
+
+/** Public URL for an object already in the event-photos bucket. */
+export const publicPhotoUrl = (objectPath: string) =>
+  `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${objectPath.replace(/^\/+/, '')}`;
 
 /** Upload one image to the event-photos bucket. Returns its public URL. */
 export async function uploadPhoto(
