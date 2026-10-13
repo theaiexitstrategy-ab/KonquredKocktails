@@ -20,8 +20,13 @@ import { PORTAL_URL, PORTAL_SLUG } from './portal';
 /** The silent loop the hero shipped with. Also the fallback. */
 export const DEFAULT_HERO_PLAYBACK_ID = 'FSsAfj00KwDZSPPaApJjMHqx5msnrneNULZFEdDov01g8';
 
-/** How long a portal change takes to reach the page, in seconds. */
+/** Fallback freshness, in seconds. Normally the portal pings /api/revalidate
+ *  with this tag the moment Stephen changes the hero, so this only matters
+ *  if that ping fails. */
 export const HERO_REVALIDATE_SECONDS = 60;
+
+/** Cache tag on the hero fetch; app/api/revalidate drops it on demand. */
+export const HERO_VIDEO_TAG = 'hero-video';
 
 /** Mux playback ids are alphanumeric. Anything else is not rendered. */
 const PLAYBACK_ID = /^[A-Za-z0-9]{10,80}$/;
@@ -31,7 +36,7 @@ export async function getHeroPlaybackId(): Promise<string> {
     const url = new URL('/api/external/hero-video', PORTAL_URL);
     url.searchParams.set('slug', PORTAL_SLUG);
     const res = await fetch(url, {
-      next: { revalidate: HERO_REVALIDATE_SECONDS },
+      next: { revalidate: HERO_REVALIDATE_SECONDS, tags: [HERO_VIDEO_TAG] },
       // Don't hold the homepage render hostage to the portal.
       signal: AbortSignal.timeout(2500),
     });

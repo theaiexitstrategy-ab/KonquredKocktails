@@ -56,6 +56,8 @@ export async function sb<T>(
     /** Seconds. Lets a GET sit in Next's data cache. Without it every call is
      *  no-store, which would turn a statically regenerated page dynamic. */
     revalidate?: number;
+    /** Cache tags for that GET, so revalidateTag() can drop it on demand. */
+    tags?: string[];
   } = { method: 'GET' },
 ): Promise<SbResult<T>> {
   if (!SUPABASE_ANON_KEY) {
@@ -69,7 +71,9 @@ export async function sb<T>(
         ...(init.prefer ? { Prefer: init.prefer } : {}),
       }),
       ...(init.body ? { body: JSON.stringify(init.body) } : {}),
-      ...(init.revalidate ? { next: { revalidate: init.revalidate } } : { cache: 'no-store' as const }),
+      ...(init.revalidate
+        ? { next: { revalidate: init.revalidate, ...(init.tags ? { tags: init.tags } : {}) } }
+        : { cache: 'no-store' as const }),
     });
     const text = await res.text();
     const data = text ? JSON.parse(text) : null;
