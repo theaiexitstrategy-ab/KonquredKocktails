@@ -57,7 +57,7 @@ Public events Stephen is pouring at, which he manages in the portal (**Bookings 
 
 - Table: `public.kk_events` (portal migration 0050), read server-side with the anon key via `sb()`. RLS lets anon see `published` rows only. **Read-only** — the site never writes to it.
 - Filter: this tenant, `published`, still upcoming, ordered `starts_at, sort_order`, max 6. "Upcoming" means until `ends_at`; with no end time, through the end of its start day in Central. An event shouldn't vanish the minute it starts, and a `time_tbd` row's `starts_at` is only a placeholder hour.
-- Freshness: the fetch revalidates every **300s**, so new events appear within ~5 min.
+- Freshness: the portal pings `POST /api/revalidate` with tag `kk-events` after every save or delete, so changes show on the next page load. The fetch's **300s** revalidate is the fallback.
 - **Hides when empty:** on zero rows or any error the section, its heading, the JSON-LD, and the "Events" menu link are all absent. There is no "nothing scheduled" state.
 - Times always show in **America/Chicago**; `time_tbd` shows "Time to be announced" and emits a date-only `startDate` in the `schema.org/Event` JSON-LD (rendered in `app/page.tsx`).
 - Flyers: `image_path` is a path inside the public `event-photos` bucket, shown through `next/image` with `object-fit: contain` (flyers carry their own type). That bucket is the one `remotePatterns` entry in `next.config.mjs`.
@@ -89,10 +89,19 @@ Public events Stephen is pouring at, which he manages in the portal (**Bookings 
 Stephen swaps the homepage hero video in the portal (Portfolio tab → "Set as homepage hero"). No redeploy.
 
 - read: `GET {PORTAL_URL}/api/external/hero-video?slug={PORTAL_SLUG}` → `{ hero: { playback_id, title, aspect_ratio, updated_at } | null }`. Server-side in `lib/hero-video.ts`, passed into `KkClient` as `heroPlaybackId`.
-- `app/page.tsx` sets `revalidate = 60`, so a change goes live within about a minute.
+- **Instant updates:** after Stephen sets or clears the hero, the portal calls `POST /api/revalidate` with tag `hero-video` (see *Portal → site revalidation* below), so the next page load shows it. `app/page.tsx`'s `revalidate = 60` is only the fallback for when that ping fails.
 - **Any failure falls back to `DEFAULT_HERO_PLAYBACK_ID`** (the original loop): portal down, a 2.5s timeout, 404, `hero: null`, or a malformed id. The phone frame must never render empty.
 - The frame is portrait (9:19, cover-cropped), so a landscape clip loses its sides. The portal warns about this; the site doesn't police it.
 - Portal side: `client_portfolio_videos.is_hero`, unique per tenant. Hero eligibility ignores `is_active`, so a hero-only clip can stay out of the event log.
+
+## Portal → site revalidation (`POST /api/revalidate`)
+The portal tells this site to drop a cached section the moment Stephen changes it in the portal (portal `lib/site-revalidate.js`).
+
+- Body `{ "tag": "hero-video" | "kk-events" }`. Any other tag gets a 400, so the route can't purge arbitrary cache. It runs `revalidateTag(tag)` plus `revalidatePath('/')`.
+- Auth: header `x-portal-key-sha256` = sha256 hex of `KK_PORTAL_WRITE_KEY`. The portal stores only that hash (`tenant_write_keys.key_hash`), so it's the one value both sides already hold. No new secret on either side. A raw `x-portal-key` equal to the key is also accepted. **Not** `clients.portal_api_key`: that's a different credential, and the site doesn't have it.
+- 401 for a missing or wrong key, 500 if `KK_PORTAL_WRITE_KEY` is unset, 405 for anything but POST.
+- Tags are constants: `HERO_VIDEO_TAG` in `lib/hero-video.ts`, `EVENTS_TAG` in `lib/events.ts`. `sb()` takes `tags` alongside `revalidate`.
+- The portal's `/api/external/hero-video` is `no-store`. An edge copy there would hand the refetch the old hero.
 
 ## /merch — portal-driven storefront
 Same format as `theflexfacility.com/merch`, `islaystudiosllc.com/merch`, and `willpowerfitnessfactory.com/merch`. **The GoElev8 portal is the catalog** — nothing about the products is hardcoded here. Stephen lists / hides / re-prices / re-photographs merch in the portal Merch tab and it appears on the next page load. No redeploy.
@@ -172,6 +181,7 @@ The 402 is intentional, not a bug: without the connected account, charging would
 - Never commit raw MP4 masters to the repo or serve them un-optimized from `public/`.
 
 ## Current work log
+- 2026-10-13: Portal changes to the hero and events now show on the next page load via `POST /api/revalidate`. Previously three stacked caches could lag ~2.5 min, and Stephen undid a hero change that had in fact worked.
 - 2026-10-12: Added Upcoming Experiences (#events) from the portal's `kk_events`.
 - 2026-10-10: The hero video is now chosen in the portal (`lib/hero-video.ts`), falling back to the original loop.
 - 2026-10-10: Redesigned the homepage header as a centred crest lockup (see Logo + social). Removed the inline desktop nav; the drawer is the nav at every width.

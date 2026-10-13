@@ -17,8 +17,12 @@ import { chicagoDate, type KkEvent } from './event-format';
 
 export type { KkEvent };
 
-/** A portal change reaches the page within this many seconds. */
+/** Fallback freshness, in seconds (see EVENTS_TAG). */
 export const EVENTS_REVALIDATE_SECONDS = 300;
+
+/** Cache tag on the events read; the portal pings /api/revalidate with it
+ *  after every event save or delete, so the 300s above is only a fallback. */
+export const EVENTS_TAG = 'kk-events';
 const MAX_EVENTS = 6;
 
 type EventRow = {
@@ -65,7 +69,7 @@ export async function getUpcomingEvents(): Promise<KkEvent[]> {
       `&published=is.true` +
       `&or=(starts_at.gte.${yesterday},ends_at.gte.${yesterday})` +
       `&order=starts_at.asc,sort_order.asc&limit=30`,
-    { method: 'GET', revalidate: EVENTS_REVALIDATE_SECONDS },
+    { method: 'GET', revalidate: EVENTS_REVALIDATE_SECONDS, tags: [EVENTS_TAG] },
   );
   if (!result.ok || !Array.isArray(result.data)) return [];
 
