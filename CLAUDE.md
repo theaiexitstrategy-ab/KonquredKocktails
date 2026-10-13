@@ -35,6 +35,7 @@ Usage guidance: Warm Black / Deep Emerald for backgrounds, Cream Highlight for b
 2. Hero — "An art gallery in a glass." CTAs: Reserve a Date / See the Work
 3. Experience Collection **teaser** (#experiences) — names the 7 offerings and links to `/experiences`. Not duplicated here.
 4. **This week's pours** (#menu) — the portal-driven weekly drink board
+5. **Upcoming Experiences** (#events) — public events from the portal; absent when nothing is upcoming
 6. About (#about) — the artist
 7. #book — the **Begin the Conversation** CTA, linking to `/book`. **The homepage does not take bookings.**
 
@@ -50,6 +51,16 @@ Lead capture first, then the Journey, then the 7 offerings. The order is deliber
 `public.client_signature_drinks`, read via `GET /api/drinks`, max 5, ordered by `sort_order`. One row may carry `is_feature` (enforced unique per tenant by a partial index) and renders larger as the Drink of the Week. `zero_proof` badges the row. Falls back to three seeded house drinks on any failure — a menu showing nothing is worse than one showing last week's.
 
 The portal has no Drinks tab yet, so the table is edited by hand today. The site already reads it, so that tab is purely a UI job — no contract change needed.
+
+## Upcoming Experiences (`/#events`)
+Public events Stephen is pouring at, which he manages in the portal (**Bookings → Events**). They're listings for someone else's ticketed event (Posh, Eventbrite…), not seats we sell. Data is in `lib/events.ts` + `lib/event-format.ts`, rendered by `app/components/UpcomingExperiences.tsx`.
+
+- Table: `public.kk_events` (portal migration 0050), read server-side with the anon key via `sb()`. RLS lets anon see `published` rows only. **Read-only** — the site never writes to it.
+- Filter: this tenant, `published`, still upcoming, ordered `starts_at, sort_order`, max 6. "Upcoming" means until `ends_at`; with no end time, through the end of its start day in Central. An event shouldn't vanish the minute it starts, and a `time_tbd` row's `starts_at` is only a placeholder hour.
+- Freshness: the fetch revalidates every **300s**, so new events appear within ~5 min.
+- **Hides when empty:** on zero rows or any error the section, its heading, the JSON-LD, and the "Events" menu link are all absent. There is no "nothing scheduled" state.
+- Times always show in **America/Chicago**; `time_tbd` shows "Time to be announced" and emits a date-only `startDate` in the `schema.org/Event` JSON-LD (rendered in `app/page.tsx`).
+- Flyers: `image_path` is a path inside the public `event-photos` bucket, shown through `next/image` with `object-fit: contain` (flyers carry their own type). That bucket is the one `remotePatterns` entry in `next.config.mjs`.
 
 ## The Experience Collection data
 `data/experiences.ts` is the single source of truth for offerings and pricing — a price change is a one-line edit there and nothing else. `app/components/ExperienceCollection.tsx` renders it.
@@ -70,7 +81,7 @@ The portal has no Drinks tab yet, so the table is edited by hand today. The site
 ## Stack
 - **Page-level CSS goes in a `<style dangerouslySetInnerHTML={{ __html: CSS }} />`, never `<style>{CSS}</style>`.** A `<style>` element is raw text to the HTML parser, so React's escaping of a text child ships `font-family:&quot;Outfit&quot;` and `content:&#x27;&#x27;` as literal CSS — dead rules until hydration rewrites them, plus a hydration mismatch on every page. Fixed across all pages 2026-10-07.
 - Next.js 14 App Router, deployed on Vercel. Stripe (deposits). Video on Mux via `@mux/mux-player-react`.
-- Deliberately minimal: no Tailwind, no auth, no middleware, no Stripe SDK. Every page is 100% inline-styled. Supabase is reached over REST from the server, for `/reviews` only.
+- Deliberately minimal: no Tailwind, no auth, no middleware, no Stripe SDK. Every page is 100% inline-styled. Supabase is reached over REST from the server only — `/reviews`, the drinks board, and `kk_events`.
 - Routes: `/`, `/book` (booking calendar), `/portfolio` (event log), `/reviews` (guest stories), `/merch` (storefront), plus `/api/book/*` and `/api/reviews`. All public.
 - Brand tokens (palette + the two typefaces) live in `app/theme.ts` — both pages import from it so they can't drift.
 
@@ -161,6 +172,7 @@ The 402 is intentional, not a bug: without the connected account, charging would
 - Never commit raw MP4 masters to the repo or serve them un-optimized from `public/`.
 
 ## Current work log
+- 2026-10-12: Added Upcoming Experiences (#events) from the portal's `kk_events`.
 - 2026-10-10: The hero video is now chosen in the portal (`lib/hero-video.ts`), falling back to the original loop.
 - 2026-10-10: Redesigned the homepage header as a centred crest lockup (see Logo + social). Removed the inline desktop nav; the drawer is the nav at every width.
 - 2026-10-08: Replaced the Konquered Balance seal with the full Konquered Kocktails KK monogram site-wide, added a favicon, and added an Instagram button (About block) + footer handle on the homepage.
