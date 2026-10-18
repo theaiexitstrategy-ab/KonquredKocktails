@@ -25,6 +25,8 @@ import {
   CONTACT,
 } from '../theme';
 import { EXPERIENCE_COLLECTION, experienceBySlug } from '@/data/experiences';
+import { dateParts } from '@/lib/event-format';
+import type { ReviewableEvent } from '@/lib/events';
 
 const MAX_PHOTOS = 3;
 const MAX_LONG_EDGE = 1600;
@@ -45,6 +47,14 @@ type PublishedReview = {
   guest_name: string | null;
   photos: string[];
   created_at: string;
+  /** The dated event it came from (portal Reviews tab, or the guest's pick). */
+  kk_event?: { title: string; starts_at: string; time_tbd: boolean } | null;
+};
+
+/** "Sensory Syndicate: Fall in Scent · Fri, Oct 16" */
+const eventOptionLabel = (e: ReviewableEvent) => {
+  const d = dateParts(e.starts_at);
+  return `${e.title} · ${d.weekday}, ${d.month} ${d.day}`;
 };
 
 /** Downscale + re-encode in a canvas. Returns a data URL, or null if the file
@@ -70,11 +80,12 @@ async function shrink(file: File): Promise<string | null> {
   return canvas.toDataURL('image/jpeg', JPEG_QUALITY);
 }
 
-export default function ReviewsClient() {
+export default function ReviewsClient({ recentEvents = [] }: { recentEvents?: ReviewableEvent[] }) {
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [text, setText] = useState('');
   const [eventType, setEventType] = useState('');
+  const [kkEventId, setKkEventId] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [contactOk, setContactOk] = useState(false);
@@ -98,7 +109,11 @@ export default function ReviewsClient() {
     const x = params.get('experience');
     const match = x ? experienceBySlug(x) : undefined;
     if (match) setEventType(match.title);
-  }, []);
+    // ?event=<kk_events.id> — the per-event link Stephen shares after an
+    // event. Only honoured for an event the picker actually offers.
+    const ev = params.get('event');
+    if (ev && recentEvents.some((r) => r.id === ev)) setKkEventId(ev);
+  }, [recentEvents]);
 
   const loadPublished = useCallback(async () => {
     try {
@@ -145,6 +160,7 @@ export default function ReviewsClient() {
           rating,
           review_text: text,
           event_type: eventType || null,
+          kk_event_id: kkEventId || null,
           guest_name: name || null,
           email: email || null,
           contact_ok: contactOk,
@@ -310,6 +326,19 @@ export default function ReviewsClient() {
                   Every field below can stay blank. Leave it anonymous if you&rsquo;d rather.
                 </p>
 
+                {recentEvents.length > 0 && (
+                  <label style={{ display: 'block', marginBottom: 16 }}>
+                    <span style={labelStyle}>Were you at one of our events?</span>
+                    <select className="kk-input" value={kkEventId} onChange={(e) => setKkEventId(e.target.value)}
+                      style={{ ...inputStyle, appearance: 'none' }}>
+                      <option value="" style={optionStyle}>No, or prefer not to say</option>
+                      {recentEvents.map((ev) => (
+                        <option key={ev.id} value={ev.id} style={optionStyle}>{eventOptionLabel(ev)}</option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+
                 <label style={{ display: 'block' }}>
                   <span style={labelStyle}>Which experience was it?</span>
                   <select className="kk-input" value={eventType} onChange={(e) => setEventType(e.target.value)}
@@ -430,6 +459,7 @@ export default function ReviewsClient() {
                 )}
                 <figcaption style={{ marginTop: 'auto', fontFamily: FB, fontSize: 11.5, letterSpacing: '1.2px', textTransform: 'uppercase', color: DIM, fontWeight: 500 }}>
                   {r.guest_name || 'A guest'}
+                  {r.kk_event?.title ? ` · ${r.kk_event.title}` : ''}
                   {r.event_type ? ` · ${r.event_type}` : ''}
                 </figcaption>
               </figure>

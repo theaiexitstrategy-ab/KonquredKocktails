@@ -62,6 +62,15 @@ Public events Stephen is pouring at, which he manages in the portal (**Bookings 
 - Times always show in **America/Chicago**; `time_tbd` shows "Time to be announced" and emits a date-only `startDate` in the `schema.org/Event` JSON-LD (rendered in `app/page.tsx`).
 - Flyers: `image_path` is a path inside the public `event-photos` bucket, shown through `next/image` with `object-fit: contain` (flyers carry their own type). That bucket is the one `remotePatterns` entry in `next.config.mjs`.
 
+## Reviews ↔ events (`/reviews`)
+A review can be tagged with the dated event it came from — `reviews.kk_event_id` → `kk_events` (portal migration 0056). Distinct from `event_type`, which is the free-text *offering* the guest picks ("Krafted Expressions").
+
+- **Stephen tags them in the portal** (Reviews tab): per review, in bulk, or via the banner that spots reviews submitted the night of an event. The reviewer's lead also gets an `Event: <title>` tag.
+- **Guests can tag themselves:** the form shows "Were you at one of our events?" listing published events from the last 45 days (`getReviewableEvents`, cached under the `kk-events` tag like the homepage list). Hidden when there are none.
+- **Per-event links:** `/reviews?event=<kk_events.id>` preselects that event. The portal's "🔗 Event review links" button lists them for sharing after an event.
+- `POST /api/reviews` only accepts a `kk_event_id` for a recent published event of this tenant (`isReviewableEvent`, uncached); anything else is dropped, never an error. If the insert fails with the event attached, it retries without — a review is never lost over its tag. A database trigger also refuses another tenant's event.
+- `GET /api/reviews` embeds `kk_event:kk_events(title,starts_at,time_tbd)`; the card caption reads "Name · Event · Experience". If the embed fails (migration not applied), it falls back to the plain columns.
+
 ## The Experience Collection data
 `data/experiences.ts` is the single source of truth for offerings and pricing — a price change is a one-line edit there and nothing else. `app/components/ExperienceCollection.tsx` renders it.
 

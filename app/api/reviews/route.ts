@@ -10,6 +10,7 @@
 // see lib/supabase.ts for why that key must not be published.
 
 import { sb, uploadPhoto, CLIENT_ID, isSupabaseConfigured } from '@/lib/supabase';
+import { isReviewableEvent } from '@/lib/events';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,6 +30,10 @@ const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'i
  *  absent — a guest leaving their address for follow-up has not agreed to
  *  have it published. */
 const PUBLIC_COLUMNS = 'id,rating,review_text,event_type,guest_name,photos,created_at';
+/** The event Stephen (or the guest) tagged the review with — portal
+ *  migration 0056. kk_events' anon policy only exposes published events, so
+ *  an unpublished one embeds as null. */
+const EVENT_EMBED = ',kk_event:kk_events(title,starts_at,time_tbd)';
 
 function field(value: unknown, max: number): string {
   return String(value ?? '').trim().slice(0, max);
@@ -38,13 +43,17 @@ export async function GET(req: Request) {
   if (!isSupabaseConfigured()) return Response.json({ reviews: [] });
 
   const limit = Math.min(Number(new URL(req.url).searchParams.get('limit')) || 5, 20);
-  const result = await sb<unknown[]>(
-    `reviews?select=${PUBLIC_COLUMNS}` +
+  const query = (cols: string) => sb<unknown[]>(
+    `reviews?select=${cols}` +
       `&client_id=eq.${CLIENT_ID}` +
       `&published=is.true` +
       `&order=created_at.desc&limit=${limit}`,
     { method: 'GET' },
   );
+  // Without the event if the embed fails (migration 0056 not applied yet) —
+  // the reviews themselves matter more than their event line.
+  let result = await query(PUBLIC_COLUMNS + EVENT_EMBED);
+  if (!result.ok) result = await query(PUBLIC_COLUMNS);
 
   // A read failure shouldn't break the page — the form is the point, the
   // social proof is a bonus.
@@ -116,9 +125,15 @@ export async function POST(req: Request) {
      policy — and that policy only exposes published rows. A brand-new review
      is unpublished by definition, so the whole INSERT would fail 42501. The
      guest doesn't need the id back. */
-  const result = await sb<null>('reviews', {
+  // A guest's event pick is honoured only for a recent published event of
+  // this tenant; anything else is dropped rather than failing the review.
+  const eventId = field(body.kk_event_id, 40);
+  const kkEventId = eventId && (await isReviewableEvent(eventId)) ? eventId : null;
+
+  const insert = (extra: Record<string, unknown>) => sb<null>('reviews', {
     method: 'POST',
     body: {
+      ...extra,
       client_id: CLIENT_ID,
       rating,
       review_text: reviewText,
@@ -135,6 +150,9 @@ export async function POST(req: Request) {
       source_url: field(body.source_url, 300) || null,
     },
   });
+  let result = await insert(kkEventId ? { kk_event_id: kkEventId } : {});
+  // Never lose a review over its event tag (e.g. before migration 0056).
+  if (!result.ok && kkEventId) result = await insert({});
 
   if (!result.ok) {
     return Response.json({ error: result.error }, { status: result.status });

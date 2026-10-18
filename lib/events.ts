@@ -110,3 +110,58 @@ export function eventsJsonLd(events: KkEvent[]) {
     ...(e.description ? { description: e.description } : {}),
   }));
 }
+
+/** A past (or tonight's) event a guest can say their review is about. */
+export type ReviewableEvent = {
+  id: string;
+  title: string;
+  starts_at: string;
+  time_tbd: boolean;
+  venue_name: string | null;
+};
+
+/** How far back the review form offers events, and how far back the API
+ *  accepts a guest's pick. A shared ?event= link keeps working this long. */
+export const REVIEWABLE_DAYS = 45;
+
+function reviewableWindow(now = new Date()) {
+  return {
+    // Started within the window, or starts later today (tagging tonight's
+    // event while it's still on).
+    from: new Date(now.getTime() - REVIEWABLE_DAYS * 24 * 3600 * 1000).toISOString(),
+    until: new Date(now.getTime() + 12 * 3600 * 1000).toISOString(),
+  };
+}
+
+/**
+ * Recent published events, newest first, for the /reviews "Which event?"
+ * picker. Same table, policy and cache tag as the homepage list, so an edit
+ * in the portal reaches both. Any failure → [] and the picker is hidden.
+ */
+export async function getReviewableEvents(): Promise<ReviewableEvent[]> {
+  if (!isSupabaseConfigured()) return [];
+  // Hour-rounded so the URL (and its cache entry) is stable within the hour.
+  const now = new Date(Math.floor(Date.now() / 3600e3) * 3600e3);
+  const { from, until } = reviewableWindow(now);
+  const result = await sb<ReviewableEvent[]>(
+    `kk_events?select=id,title,starts_at,time_tbd,venue_name` +
+      `&client_id=eq.${CLIENT_ID}&published=is.true` +
+      `&starts_at=gte.${from}&starts_at=lte.${until}` +
+      `&order=starts_at.desc&limit=8`,
+    { method: 'GET', revalidate: EVENTS_REVALIDATE_SECONDS, tags: [EVENTS_TAG] },
+  );
+  return result.ok && Array.isArray(result.data) ? result.data : [];
+}
+
+/** True when `id` is one of this tenant's published events that a guest may
+ *  tag a review with right now. Uncached: it gates a write. */
+export async function isReviewableEvent(id: string): Promise<boolean> {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) return false;
+  const { from, until } = reviewableWindow();
+  const result = await sb<{ id: string }[]>(
+    `kk_events?select=id&id=eq.${id}&client_id=eq.${CLIENT_ID}&published=is.true` +
+      `&starts_at=gte.${from}&starts_at=lte.${until}&limit=1`,
+    { method: 'GET' },
+  );
+  return result.ok && Array.isArray(result.data) && result.data.length === 1;
+}
