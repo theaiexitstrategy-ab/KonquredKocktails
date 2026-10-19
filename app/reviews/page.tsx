@@ -8,6 +8,7 @@
 // route and again by the RLS policy on public.reviews.
 
 import ReviewsClient from './ReviewsClient';
+import { getReviewableEvents } from '@/lib/events';
 
 export const metadata = {
   title: 'Share Your Story — Konquered Kocktails',
@@ -28,6 +29,9 @@ export const metadata = {
   },
 };
 
-export default function ReviewsPage() {
-  return <ReviewsClient />;
+// Recent events for "Which event were you at?" — cached and dropped by the
+// portal's kk-events revalidate ping, like the homepage list.
+export default async function ReviewsPage() {
+  const recentEvents = await getReviewableEvents();
+  return <ReviewsClient recentEvents={recentEvents} />;
 }
