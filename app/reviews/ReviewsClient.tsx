@@ -24,6 +24,7 @@ import {
   GARNET, AMETHYST, CREAM, TEXT, MUTED, DIM, LINE, LINE2, FD, FB,
   CONTACT,
 } from '../theme';
+import { ReserveButton } from '../components/AvaConcierge';
 import { EXPERIENCE_COLLECTION, experienceBySlug } from '@/data/experiences';
 
 const MAX_PHOTOS = 3;
@@ -192,9 +193,7 @@ export default function ReviewsClient() {
           </Link>
           <nav style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 22 }}>
             <Link href="/portfolio" className="kk-navlink" style={navLink}>Art Gallery</Link>
-            <Link href="/book" className="kk-gold-btn" style={{ ...goldButton, padding: '10px 22px', fontSize: 12 }}>
-              Reserve a Date
-            </Link>
+            <ReserveButton className="kk-gold-btn" style={{ ...goldButton, padding: '10px 22px', fontSize: 12 }} />
           </nav>
         </div>
       </header>
@@ -235,7 +234,7 @@ export default function ReviewsClient() {
               </p>
               <div style={{ display: 'flex', gap: 10, marginTop: 26, justifyContent: 'center', flexWrap: 'wrap' }}>
                 <Link href="/portfolio" className="kk-ghost-btn" style={ghostButton}>See the event log</Link>
-                <Link href="/book" className="kk-gold-btn" style={goldButton}>Reserve a date</Link>
+                <ReserveButton className="kk-gold-btn" style={goldButton}>Reserve a date</ReserveButton>
               </div>
             </div>
           ) : (

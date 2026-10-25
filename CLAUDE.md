@@ -140,6 +140,29 @@ Every event Stephen has composed, newest first, filterable by type and year. Not
 - **Lead capture:** Ava's `capture_lead` tool → `POST /api/ava/lead` (header `x-ava-tool-secret` = `AVA_TOOL_SECRET`, injected at sync/chat time, never committed) → portal `experience-leads`, source `ava-voice` / `ava-chat`. The relationship label ("New inquiry" / "Returning inquiry" / "Past client") leads `goal`; the portal emails key off it.
 - **Re-engagement is email-only until a texting number exists** and lives in the portal (`lib/experience-reengage.js`, cron `/api/cron/experience-reengage` every 10 min). Inquiry series (Ava leads): Stephen alert + guest emails at 0h / 2d / 6d / 14d. Post-event (confirmed bookings, any source): +1d review request / +21d / +75d. Stops on deposit, cancel, `Do Not Contact` tag, or unsubscribe. Copy and cadence are edited in that one portal file. Pause with portal env `REENGAGE_PAUSED=1`.
 
+## "Reserve a Date" opens Ava (since 2026-10-24)
+Every "Reserve a Date" button opens Ava's chat panel instead of sending the guest to the `/book` form. These are the homepage header drawer and hero, plus the `/experiences`, `/portfolio` and `/reviews` buttons.
+
+- `app/components/AvaConcierge.tsx` is mounted once in `layout.tsx`. `<ReserveButton>` dispatches `kk:concierge` to open it. The button is still a real link to `/book`, so if the panel never mounted, the click goes to the calendar. "Prefer the calendar?" in the panel goes there as well.
+- `POST /api/ava/chat` is public with no passcode. Limits: 30 messages per IP per 10 minutes, and 40 turns per conversation. If Vapi or `AVA_TOOL_SECRET` is missing it returns 503, and the panel offers the calendar. The Vapi call is shared with `/ava` through `lib/ava-chat.ts`.
+- **Every turn is logged** to portal Messaging → Agent (`lib/agent-log.ts` → portal `POST /api/external/agent-conversations`, using the write key). The table is `agent_conversations` (portal migration 0065): RLS on with no policies, read by the portal with the service role only. The browser's session id rides on Ava's tool URL (`?session=`), so `capture_lead` attaches the guest's name, email and lead id to the conversation. `/ava` test chats are **not** logged.
+- A logging failure never fails the chat.
+- Not yet switched: the autumn band and the "Begin the Conversation" CTAs still link to `/book`.
+
+### Ava manages the calendar
+Ava's stated goal (in her prompt) is to fill Stephen's calendar.
+- Her `check_availability` tool calls `POST /api/ava/availability`. It reads the portal's real availability through `lib/availability.ts`, the same source as `/book`, so the two can't disagree.
+- In chat, the tool returns a link per open date: `/book?experience=<slug>&date=YYYY-MM-DD`. `/book` opens on that date if it is still free. On a phone call, Ava sends the guest to the website instead.
+- Her prompt now treats the **$200 deposit** as what holds a date. It used to say 50% after a signed agreement. Refund terms are deferred to Stephen.
+- Both tools share `lib/ava-webhook.ts` for the secret check and the reply envelope.
+- **Voice picks up prompt and tool changes only after `POST /api/ava-test/sync`.** Chat reads the JSON on every turn.
+
+### Ava's back office (portal: `lib/ava-agent.js`, Messaging → Agent)
+- **Nothing is emailed without Stephen pressing Send.** Sends go out from his connected Gmail via `deliver()`, with an unsubscribe link.
+- **Nudges** run daily at 15:00 UTC. A chat with an email and no deposit gets a follow-up written from its own transcript: round 1 after 48 quiet hours, round 2 seven days after round 1 is sent. For `ava-chat` leads, the generic re-engage series is cut to the thank-you only (`draftedSources`).
+- **Opportunities** run Mondays at 13:00 UTC from three sources: chat signals, contacts, and a web search. Contacts are past clients at their anniversary, quiet enquiries, and reviewers with `contact_ok`. Stephen gets a digest email whose Approve buttons lead to a confirm page (`/api/external/agent-approve`; GET never acts). Approving has Ava write an outreach draft.
+- The model is `claude-opus-5-5` with `fallbacks: "default"`. Pause it with `AVA_AGENT_PAUSED=1` in the portal env.
+
 ## Seasonal theming
 - **Autumn, Sept 22 – Nov 30** (visitor's local time), homepage only. Everything lives in `app/components/AutumnTheme.tsx` + `app/components/autumn-season.ts`; the mounts are four tags in `KkClient.tsx` and one inline script in `layout.tsx`. Deleting those retires the season completely.
 - Autumn, deliberately **not Halloween** — harvest, amber light, spiced and smoked flavour copy. iSlay Studios and The FLEX Facility run Halloween themes in October; this brand does not.
@@ -181,6 +204,7 @@ The 402 is intentional, not a bug: without the connected account, charging would
 - Never commit raw MP4 masters to the repo or serve them un-optimized from `public/`.
 
 ## Current work log
+- 2026-10-24: "Reserve a Date" now opens Ava's chat instead of the static `/book` form. Every conversation is logged to the portal's Messaging → Agent tab. Ava now checks live dates and links to `/book` with the date preselected. The portal drafts follow-ups and finds opportunities weekly; Stephen approves and sends everything.
 - 2026-10-13: Portal changes to the hero and events now show on the next page load via `POST /api/revalidate`. Previously three stacked caches could lag ~2.5 min, and Stephen undid a hero change that had in fact worked.
 - 2026-10-12: Added Upcoming Experiences (#events) from the portal's `kk_events`.
 - 2026-10-10: The hero video is now chosen in the portal (`lib/hero-video.ts`), falling back to the original loop.

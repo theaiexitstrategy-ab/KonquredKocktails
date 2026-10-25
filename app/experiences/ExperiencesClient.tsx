@@ -26,6 +26,7 @@ import {
   INK, PANEL, PANEL2, EMERALD, EMERALD_D, GOLD, GOLD_HI, GOLD_D,
   GARNET, AMETHYST, CREAM, TEXT, MUTED, DIM, LINE, LINE2, FD, FB, CONTACT,
 } from '../theme';
+import { ReserveButton } from '../components/AvaConcierge';
 import {
   ExperienceCollection, ExperienceJourney, JourneyIntro, BeginTheConversation,
 } from '../components/ExperienceCollection';
@@ -119,9 +120,7 @@ export default function ExperiencesClient() {
           </Link>
           <nav style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 22 }}>
             <Link href="/portfolio" className="kk-navlink" style={navLink}>Art Gallery</Link>
-            <Link href="/book" className="kk-gold-btn" style={{ ...goldButton, padding: '10px 22px', fontSize: 12 }}>
-              Reserve a Date
-            </Link>
+            <ReserveButton className="kk-gold-btn" style={{ ...goldButton, padding: '10px 22px', fontSize: 12 }} />
           </nav>
         </div>
       </header>

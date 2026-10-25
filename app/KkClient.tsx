@@ -14,6 +14,7 @@ import {
 } from './theme';
 
 import { BeginTheConversation } from './components/ExperienceCollection';
+import { ReserveButton } from './components/AvaConcierge';
 /* Seasonal dressing — autumn only, and only while html.kk-autumn is set.
    Delete these four mounts with the component to retire the season. */
 import { AutumnStyles, AutumnBand, AutumnLeaves, AutumnWash } from './components/AutumnTheme';
@@ -136,11 +137,9 @@ export default function KkClient({ heroPlaybackId, events }: { heroPlaybackId: s
                 {label}
               </a>
             ))}
-            <a href="/book" className="kk-gold-btn"
+            <ReserveButton className="kk-gold-btn"
                onClick={() => setMenuOpen(false)}
-               style={{ ...goldButton, ...fullButton, marginTop: 10, fontSize: 13 }}>
-              Reserve a Date
-            </a>
+               style={{ ...goldButton, ...fullButton, marginTop: 10, fontSize: 13 }} />
           </nav>
         )}
       </header>
@@ -252,10 +251,7 @@ export default function KkClient({ heroPlaybackId, events }: { heroPlaybackId: s
           </div>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginTop: 'clamp(20px, 3vw, 34px)', justifyContent: 'center' }}>
-            <a href="/book"
-               className="kk-gold-btn" style={{ ...goldButton, padding: '15px 30px', fontSize: 13 }}>
-              Reserve a Date
-            </a>
+            <ReserveButton className="kk-gold-btn" style={{ ...goldButton, padding: '15px 30px', fontSize: 13 }} />
             <a href="/portfolio"
                className="kk-ghost-btn" style={{ ...ghostButton, padding: '15px 30px', fontSize: 13 }}>
               See the Work

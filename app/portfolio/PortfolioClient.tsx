@@ -37,6 +37,7 @@ import {
   INK, PANEL, PANEL2, GOLD, GOLD_HI, GOLD_D, GARNET, AMETHYST, EMERALD,
   CREAM, TEXT, MUTED, DIM, LINE, LINE2, FD, FB, CONTACT,
 } from '../theme';
+import { ReserveButton } from '../components/AvaConcierge';
 
 const MuxPlayer = dynamic(() => import('@mux/mux-player-react'), { ssr: false });
 
@@ -252,9 +253,7 @@ export default function PortfolioClient() {
           </Link>
           <nav style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 22 }}>
             <Link href="/experiences" className="kk-navlink" style={navLink}>Experiences</Link>
-            <Link href="/book" className="kk-gold-btn" style={{ ...goldButton, padding: '10px 22px', fontSize: 12 }}>
-              Reserve a Date
-            </Link>
+            <ReserveButton className="kk-gold-btn" style={{ ...goldButton, padding: '10px 22px', fontSize: 12 }} />
           </nav>
         </div>
       </header>
@@ -378,7 +377,7 @@ export default function PortfolioClient() {
         <p style={{ margin: '14px auto 26px', color: MUTED, fontSize: 15.5, lineHeight: 1.7, maxWidth: 500, fontWeight: 300 }}>
           Tell Stephen the date and the space. He composes the rest around it.
         </p>
-        <Link href="/book" className="kk-gold-btn" style={goldButton}>Reserve a Date</Link>
+        <ReserveButton className="kk-gold-btn" style={goldButton} />
       </section>
 
       <footer style={{ borderTop: `1px solid ${LINE}`, padding: 'clamp(28px, 4vw, 44px) 20px' }}>
