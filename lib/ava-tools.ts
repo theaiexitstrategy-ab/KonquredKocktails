@@ -18,15 +18,18 @@ export type AvaChannel = 'voice' | 'chat';
 export const toolSecret = () => process.env.AVA_TOOL_SECRET || '';
 
 /** Ava's tools with the auth header added and the channel tagged on the URL,
- *  so a saved lead records whether it came from a call or a chat. Returns
- *  null when AVA_TOOL_SECRET is unset — callers refuse rather than ship
- *  tools that would be rejected on every call. */
-export function authedTools(channel: AvaChannel) {
+ *  so a saved lead records whether it came from a call or a chat. A public
+ *  chat also tags its session id, so the lead tool can attach the guest to
+ *  that conversation's log in the portal. Returns null when AVA_TOOL_SECRET
+ *  is unset — callers refuse rather than ship tools that would be rejected
+ *  on every call. */
+export function authedTools(channel: AvaChannel, session?: string) {
   const secret = toolSecret();
   if (!secret) return null;
   return assistantConfig.model.tools.map((tool) => {
     const url = new URL(tool.server.url);
     url.searchParams.set('channel', channel);
+    if (session) url.searchParams.set('session', session);
     return {
       ...tool,
       server: { ...tool.server, url: url.toString(), headers: { [TOOL_SECRET_HEADER]: secret } },

@@ -119,6 +119,10 @@ export default function BookClient() {
   const [availBusy, setAvailBusy] = useState(false);
   const [availError, setAvailError] = useState('');
   const [demo, setDemo] = useState(false);
+  /* Ava links straight to a date she has confirmed is open
+     (/book?experience=…&date=YYYY-MM-DD); step 2 opens on it if it is still
+     free, and on the first open date otherwise. */
+  const [preferredDate, setPreferredDate] = useState('');
 
   const [depositBusy, setDepositBusy] = useState(false);
   const [depositError, setDepositError] = useState('');
@@ -152,6 +156,8 @@ export default function BookClient() {
        Ignore an unknown key rather than landing on a blank selection. */
     const pre = params.get('experience');
     if (pre && experienceBySlug(pre)) setExperience(pre);
+    const date = params.get('date');
+    if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) setPreferredDate(date);
   }, []);
 
   /* ── Step 2: real availability ─────────────────────────────────── */
@@ -181,7 +187,7 @@ export default function BookClient() {
 
       const withSlots: Day[] = (data.days ?? []).filter((d: Day) => d.slots?.length);
       setDays(withSlots);
-      setDayKey(withSlots[0]?.date ?? '');
+      setDayKey(withSlots.find((d) => d.date === preferredDate)?.date ?? withSlots[0]?.date ?? '');
       if (!withSlots.length) {
         setAvailError(
           'No open dates in the next two months. Call or email and Stephen will find you a date.',
@@ -194,7 +200,7 @@ export default function BookClient() {
     } finally {
       setAvailBusy(false);
     }
-  }, [experience]);
+  }, [experience, preferredDate]);
 
   useEffect(() => {
     if (step === 2) loadAvailability();

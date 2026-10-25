@@ -31,6 +31,7 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import AgeGate from './components/AgeGate';
+import AvaConcierge from './components/AvaConcierge';
 import { AUTUMN_SCRIPT } from './components/autumn-season';
 
 /** GA4 measurement ID. */
@@ -84,7 +85,7 @@ export default function RootLayout({
         {/* 21+ gate. Wraps every route; it exempts the compliance pages
             itself (see UNGATED in AgeGate) so carrier reviewers reach the
             privacy policy, terms, and SMS program docs without a barrier. */}
-        <AgeGate>{children}</AgeGate>
+        <AgeGate>{children}<AvaConcierge /></AgeGate>
 
         {/* Google Analytics (gtag.js) */}
         <Script
